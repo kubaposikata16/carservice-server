@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
     lastName: { type: String, required: true },
     email: { type: String, required: true },
     password: { type: String, required: true },
+    phoneNumber: { type: String, required: true }
 }, { collection: "UserAccounts" });
 
 userSchema.methods.generateAuthToken = function () { //generowanie tokenu JWT na podstawie id użytkownika
@@ -19,16 +20,16 @@ userSchema.methods.generateAuthToken = function () { //generowanie tokenu JWT na
 
 const CarServiceDB = mongoose.connection.useDb('CarService'); // Użycie konkretnej bazy danych
 const User = CarServiceDB.model("User", userSchema); //tworzenie modelu 'User' na podstawie schematu 'userSchema'
-
 const validate = (data) => {
     const schema = Joi.object({
-        firstName: Joi.string().required().label("First Name"),
-        lastName: Joi.string().required().label("Last Name"),
+        firstName: Joi.string().regex(/^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+$/).required().label("First Name"),
+        lastName: Joi.string().regex(/^[A-ZĄĆĘŁŃÓŚŹŻ][a-ząćęłńóśźż]+$/).required().label("Last Name"),
         email: Joi.string().email().required().label("Email"),
-        password: passwordComplexity().required().label("Password"),
-    });
-    return schema.validate(data);
-}
+        password: passwordComplexity().min(8).required().label("Password"),
+        phoneNumber: Joi.string().required().length(9).pattern(/^\d+$/).label("Phone Number")
+    }).options({ abortEarly: false }); //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego
+    return schema.validate(data)
+};
 
 const validateLogin = (data) => {
     const schema = Joi.object({
@@ -38,4 +39,15 @@ const validateLogin = (data) => {
     return schema.validate(data)
 };
 
-module.exports = { User, validate, validateLogin }; //export by móc importować model i funkcje w innych częściach aplikacji
+const validateEditUser = (data) => {
+    const schema = Joi.object({
+        firstName: Joi.string().optional().label("First name"),
+        lastName: Joi.string().optional().label("Last name"),
+        email: Joi.string().email().optional().label("Email"),
+        password: Joi.string().optional().label("Password"),
+        phoneNumber: Joi.string().optional().label("Phone number"),
+    })
+    return schema.validate(data)
+};
+
+module.exports = { User, validate, validateLogin, validateEditUser }; //export by móc importować model i funkcje w innych częściach aplikacji

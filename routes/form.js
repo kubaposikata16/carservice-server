@@ -1,49 +1,48 @@
 const router = require("express").Router();
 const { Visit, validate } = require("../models/visit");
+const currentUser = require('../middleware/currentUser');
 
-router.post("/", async (req, res) => {
-	try {
-		const { error } = validate(req.body) //walidacja
-		if(error) { //jeśli błąd w walidacji
-			return res.status(400).send({ message: error.details[0].message }) //message jaki błąd
-		}
-		const newVisit = new Visit({ //tworzenie obiektu na podstawie wcześniej utworzonego modelu
-            serviceType: req.body.serviceType,
-            service: req.body.service,
-            carBrand: req.body.carBrand,
-            carModel: req.body.carModel,
-			date: req.body.date,
-            time: req.body.time,
-            moreInfo: req.body.moreInfo,
-            carProductionYear: req.body.carProductionYear,
-            engine: req.body.engine,
-            vin: req.body.vin,
-            registrationNumber: req.body.registrationNumber
-        });
-        await newVisit.save(); //zapisywanie obiektu do bazy danych
-        res.status(201).send({ message: "Visit created successfully!" }) //komunikat o utworzonej wizycie
-	} catch (error) {
-		res.status(500).send({ message: "Internal Server Error" })
-		console.log(error)
-	}
-});
-
-router.get("/", async (req, res) => {
+router.get("/", currentUser, async (req, res) => {
     try {
-        const users = await Visit.find({}) //pobiera wizytę z bazy danych
-        res.status(200).send({ data: users }) //status ok - zwraca wizyte
+        const visit = await Visit.find({ createdBy: req.currentUser._id }) //znalezienie wizyt utworzonych przed danego usera
+        res.status(200).send({ data: visit, message: "Visit details" }) //wyświetla dane wizyty
     } catch (error) {
-        res.status(500).send({ message: error.message })
-		console.log(error.message)
+        res.status(500).send({ message: "Internal Server Error" })
+        console.log(error)
     }
 });
 
-//edycja
+router.put("/:visitId", async (req, res) => {
+    try {
+        const visitId = req.params.visitId //pobiera visitId
+        const newData = req.body //pobiera dane z żądania do edycji
+        const { error } = validate(newData) //walidacja
+        if (error) {
+            return res.status(400).send({ message: error.details[0].message }) //jeśli błąd - zwraca jaki błąd
+        }
+        const updatedVisit = await Visit.findByIdAndUpdate(visitId, req.body, { new: true }) //sprawdza czy istnieje wizyta z takim visitId i ją aktualizuje
+        if (!updatedVisit) {
+            return res.status(404).send({ message: "Visit not found" }) //jeśli nie - zwraca błąd
+        }
+        res.status(200).send({ data: updatedVisit, message: "Visit updated successfully" }) //status ok - update danych
+    } catch (error) {
+        res.status(500).send({ message: "Internal Server Error" })
+        console.log(error)
+    }
+});
 
-//usuwanie?
+router.delete("/:visitId", async (req, res) => {
+    try {
+        const visitId = req.params.visitId; //pobiera visitId
+        const deletedVisit = await Visit.findByIdAndDelete(visitId) //sprawdza czy istnieje wizyta z visitId i usuwa ją
+        if (!deletedVisit) {
+            return res.status(404).send({ message: "Visit not found" }) //sprawdza czy wizyta została usunięta
+        }
+        res.status(200).send({ data: deletedVisit, message: "Visit deleted successfully" }) //jeśli usunięty zwraca sukces
+    } catch (error) {
+        res.status(500).send({ message: "Internal Server Error" })
+        console.log(error)
+    }
+});
 
 module.exports = router;
-
-/*
-DODANIE FORM I FORMS TAK JAK Z USER I USERS ŻEBY MÓC TEŻ WYŚWIETLAĆ, EDYTOWAĆ, USUWAĆ WIZYTE PO ID
-*/

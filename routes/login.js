@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
             return res.status(401).send({ message: "Invalid email or password!" }) //jeśli niepoprawne hasło - zwraca błąd
         }                    
         const token = user.generateAuthToken() //generowany jest authtoken
-        res.status(200).send({ data: token, message: "Logged in successfully!" }) //komunikat sukces !!!! tu może date usunąć idk jeszcze !!!!
+        res.status(200).send({ data: token, message: "Logged in successfully!" }) //komunikat sukces
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
         console.log(error)
