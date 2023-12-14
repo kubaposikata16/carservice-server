@@ -39,15 +39,4 @@ const validateLogin = (data) => {
     return schema.validate(data)
 };
 
-const validateEditUser = (data) => {
-    const schema = Joi.object({
-        firstName: Joi.string().optional().label("First name"),
-        lastName: Joi.string().optional().label("Last name"),
-        email: Joi.string().email().optional().label("Email"),
-        password: Joi.string().optional().label("Password"),
-        phoneNumber: Joi.string().optional().label("Phone number"),
-    })
-    return schema.validate(data)
-};
-
-module.exports = { User, validate, validateLogin, validateEditUser }; //export by móc importować model i funkcje w innych częściach aplikacji
+module.exports = { User, validate, validateLogin }; //export by móc importować model i funkcje w innych częściach aplikacji

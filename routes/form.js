@@ -12,6 +12,8 @@ router.get("/", currentUser, async (req, res) => {
     }
 });
 
+/*
+//dodanie tego pozwalałoby userowi na edycje wizyty po jej zatwierdzeniu - user powinien jedynie anulować wizytę (delete) po jej zatwierdzeniu jeśli mu coś nie pasuje
 router.put("/:visitId", async (req, res) => {
     try {
         const visitId = req.params.visitId //pobiera visitId
@@ -30,8 +32,10 @@ router.put("/:visitId", async (req, res) => {
         console.log(error)
     }
 });
+*/
 
-router.delete("/:visitId", async (req, res) => {
+/*
+router.delete("/:visitId", async (req, res) => {  //!!!!!!!!!!!! do poprawy !!!!!!!!!!!!!
     try {
         const visitId = req.params.visitId; //pobiera visitId
         const deletedVisit = await Visit.findByIdAndDelete(visitId) //sprawdza czy istnieje wizyta z visitId i usuwa ją
@@ -44,5 +48,6 @@ router.delete("/:visitId", async (req, res) => {
         console.log(error)
     }
 });
+*/
 
 module.exports = router;

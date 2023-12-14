@@ -21,16 +21,17 @@ app.use(cors())
 const port = process.env.PORT || 8080
 
 //definicja endpointów
-//app.post("/users");                                   //nie wiem czy to ma być????
-app.get("/users");                                      //tu może dodać tokenVerification????
+//app.post("/users");
+app.get("/users", tokenVerification);
+//app.post("/login");
 app.get("/user", tokenVerification, currentUser);
-app.put("/user", tokenVerification, currentUser);   //tu sie dlugo laduje
-app.delete("/user", tokenVerification, currentUser);//tu sie dlugo laduje
+app.put("/user", tokenVerification, currentUser);
+app.delete("/user", tokenVerification, currentUser);
 app.post("/forms", tokenVerification, currentUser);
-app.get("/forms");                                      //tu może dodać tokenVerification????
+app.get("/forms", tokenVerification);
 app.get("/form", tokenVerification, currentUser);       //currentvisist
-app.put("/form", tokenVerification, currentUser);       //currentvisit, currenuser??
-app.delete("/form", tokenVerification);    //currentvisit, currentuser
+//app.put("/form", tokenVerification, currentUser);
+//app.delete("/form", tokenVerification);    //currentvisit, currentuser
 
 //dodanie routera dla każdej ścieżki
 app.use("/users", usersRoutes);

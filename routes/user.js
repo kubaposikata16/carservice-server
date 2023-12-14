@@ -1,6 +1,6 @@
 const router = require("express").Router()
 const currentUser = require('../middleware/currentUser');
-const { User, validateEditUser } = require("../models/user")
+const { User, validate } = require("../models/user")
 const bcrypt = require("bcrypt"); //biblioteka, która zapewnia haszowanie
 //const mongoose = require('mongoose');
 //const { ObjectId } = mongoose.Types;
@@ -16,7 +16,7 @@ router.get("/", currentUser, async (req, res) => {
 router.put("/", currentUser, async (req, res) => {
     try {
         const newData = req.body; //pobranie danych z żądania do edycji
-        const { error } = validateEditUser(newData); //walidacja
+        const { error } = validate(newData); //walidacja
         if (error) {
             return res.status(400).send({ message: error.details[0].message }) //jeśli błąd - zwraca jaki błąd
         }
