@@ -5,7 +5,8 @@ const { ObjectId } = mongoose.Types;
 
 async function currentVisit(req, res, next) {
     try {
-        const visit = await Visit.findById(req.visit._id) //znajdź wizytę na podstawie _id z req.visit
+        const visitId = req.params.visitId;
+        const visit = await Visit.findById(visitId);
         if (!visit) {
             return res.status(404).send({ message: "Visit not found" })
         }

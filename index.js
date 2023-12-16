@@ -13,6 +13,8 @@ const connection = require('./db');
 const cors = require('cors');
 const tokenVerification = require('./middleware/tokenVerification');
 const currentUser = require('./middleware/currentUser');
+const currentVisit = require('./middleware/currentVisit');
+const checkUserRole = require('./middleware/checkUserRole');
 const app = express();
 
 //middleware
@@ -21,17 +23,22 @@ app.use(cors())
 const port = process.env.PORT || 8080
 
 //definicja endpointów
-//app.post("/users");
-app.get("/users", tokenVerification);
-//app.post("/login");
+app.post("/users");
+app.get("/users", tokenVerification, checkUserRole(['employee', 'admin']));
+
+app.post("/login");
+
 app.get("/user", tokenVerification, currentUser);
 app.put("/user", tokenVerification, currentUser);
+app.put("/role/:userId", tokenVerification, checkUserRole('admin'));
 app.delete("/user", tokenVerification, currentUser);
-app.post("/forms", tokenVerification, currentUser);
-app.get("/forms", tokenVerification);
-app.get("/form", tokenVerification, currentUser);       //currentvisist
-//app.put("/form", tokenVerification, currentUser);
-//app.delete("/form", tokenVerification);    //currentvisit, currentuser
+
+app.post("/forms", tokenVerification, currentUser); //checkUserRole('client') chyba że pracownik też będzie mógł dodać wizyty np jeśli coś mu wypadnie i zadzwoni do klienta i umówi się na nową datę i starą wizytę anuluje i utworzy nową
+app.get("/forms", tokenVerification, checkUserRole(['employee', 'admin']));
+
+app.get("/form", tokenVerification, currentUser);
+//app.put("/form", tokenVerification, currentUser); //raczej bez tego bo lepiej żeby w razie zmiany czegoś w wizycie anulować ją i zrobić nową
+app.delete("/form/:visitId", tokenVerification, currentUser, currentVisit);
 
 //dodanie routera dla każdej ścieżki
 app.use("/users", usersRoutes);

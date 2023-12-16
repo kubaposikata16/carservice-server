@@ -7,7 +7,7 @@ router.post("/", currentUser, async (req, res) => {
 		const { error } = validate(req.body) //walidacja
 		if(error) { //jeśli błąd w walidacji
 			return res.status(400).send({ message: error.details[0].message }) //message jaki błąd
-		}
+		}/*
 		const newVisit = new Visit({ //tworzenie obiektu na podstawie wcześniej utworzonego modelu
             serviceType: req.body.serviceType,
             service: req.body.service,
@@ -21,8 +21,9 @@ router.post("/", currentUser, async (req, res) => {
             vin: req.body.vin,
             registrationNumber: req.body.registrationNumber,
             createdBy: req.currentUser._id
-        });
-        await newVisit.save(); //zapisywanie obiektu do bazy danych
+        })*/
+        await new Visit({ ...req.body, createdBy: req.currentUser._id }).save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
+        //await newVisit.save(); //zapisywanie obiektu do bazy danych
         res.status(201).send({ message: "Visit created successfully!" }) //komunikat o utworzonej wizycie
 	} catch (error) {
 		res.status(500).send({ message: "Internal Server Error" })
@@ -39,9 +40,5 @@ router.get("/", async (req, res) => {
 		console.log(error.message)
     }
 });
-
-//edycja?
-
-//usuwanie?
 
 module.exports = router;

@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { Visit, validate } = require("../models/visit");
 const currentUser = require('../middleware/currentUser');
+const currentVisit = require('../middleware/currentVisit');
 
 router.get("/", currentUser, async (req, res) => {
     try {
@@ -49,5 +50,33 @@ router.delete("/:visitId", async (req, res) => {  //!!!!!!!!!!!! do poprawy !!!!
     }
 });
 */
+
+router.delete("/:visitId", currentUser, currentVisit, async (req, res) => {
+    try {
+        const visitId = req.params.visitId
+        const currentDateTime = new Date() //aktualna data i czas
+        //sprawdzamy, czy bieżąca wizyta należy do zalogowanego użytkownika
+        if (!req.currentVisit || !req.currentVisit.userId == req.currentUser._id) {
+            return res.status(403).send({ message: "You are not authorized to delete this visit" })
+        }
+        const visitDateTime = new Date(req.currentVisit.date + ' ' + req.currentVisit.time) //data i czas wizyty
+        const timeDiff = visitDateTime - currentDateTime //różnica czasu między obecnym a wizytą
+        const timeDiffInHours = timeDiff / (1000 * 60 * 60) //różnica czasu w godzinach
+        const minimumHoursForCancellation = 24
+        if (timeDiffInHours <= minimumHoursForCancellation) {
+            return res.status(403).send({ message: "It's too late to cancel this visit" });
+        }
+        const deletedVisit = await Visit.findByIdAndDelete(visitId)
+        if (!deletedVisit) {
+            return res.status(404).send({ message: "Visit not found" })
+        }
+        res.status(200).send({ data: deletedVisit, message: "Visit deleted successfully" })
+    } catch (error) {
+        res.status(500).send({ message: "Internal Server Error" })
+        //console.log(error)
+        console.error(error);
+    }
+});
+
 
 module.exports = router;

@@ -1,6 +1,6 @@
 const router = require("express").Router()
 const currentUser = require('../middleware/currentUser');
-const { User, validate } = require("../models/user")
+const { User, validate, validateEditUser } = require("../models/user")
 const bcrypt = require("bcrypt"); //biblioteka, która zapewnia haszowanie
 //const mongoose = require('mongoose');
 //const { ObjectId } = mongoose.Types;
@@ -16,7 +16,7 @@ router.get("/", currentUser, async (req, res) => {
 router.put("/", currentUser, async (req, res) => {
     try {
         const newData = req.body; //pobranie danych z żądania do edycji
-        const { error } = validate(newData); //walidacja
+        const { error } = validateEditUser(newData); //walidacja
         if (error) {
             return res.status(400).send({ message: error.details[0].message }) //jeśli błąd - zwraca jaki błąd
         }
@@ -41,6 +41,29 @@ router.put("/", currentUser, async (req, res) => {
         res.status(500).send({ message: error.message });
     }
 });
+
+router.put("/role/:userId", currentUser, async (req, res) => {
+    try {
+      const { userId } = req.params //pobranie ID użytkownika z parametrów ścieżki
+      const { role } = req.body //pobranie nowej roli z ciała żądania
+  
+      //sprawdzenie, czy aktualnie zalogowany użytkownik jest administratorem
+      if (req.currentUser.role !== 'admin') {
+        return res.status(403).send({ message: "Access forbidden!" })
+      }
+  
+      // Aktualizacja roli użytkownika
+      const updatedUser = await User.findByIdAndUpdate(userId, { role }, { new: true })
+      if (!updatedUser) {
+        return res.status(404).send({ message: "User not found" })
+      }
+  
+      res.status(200).send({ data: updatedUser, message: "User role updated successfully" })
+    } catch (error) {
+      res.status(500).send({ message: error.message })
+    }
+  });
+  
 
 router.delete("/", currentUser, async (req, res) => {
     try {

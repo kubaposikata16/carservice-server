@@ -8,13 +8,22 @@ router.post("/", async (req, res) => {
         if (error) {
             return res.status(400).send({ message: error.details[0].message }) //jeśli błąd - zwraca jaki błąd
         }
-        const user = await User.findOne({ email: req.body.email }) //sprawdzenie czy istnieje już user z tym samym emailem w bazie danych
-        if (user) {
+        const { firstName, lastName, email, password, phoneNumber } = req.body;
+        const existingUser  = await User.findOne({ email: req.body.email }) //sprawdzenie czy istnieje już user z tym samym emailem w bazie danych
+        if (existingUser) {
             return res.status(409).send({ message: "User with given email already exist!" }) //jeśli tak zwraca konflikt
         } //jeśli nie
         const salt = await bcrypt.genSalt(Number(process.env.SALT)) //generuje salt używany do haszowania hasła
         const hashPassword = await bcrypt.hash(req.body.password, salt) //haszowanie za pomocą salt i bcrypt
-        await new User({ ...req.body, password: hashPassword }).save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
+        const newUser = new User({
+            firstName,
+            lastName,
+            email,
+            password: hashPassword,
+            phoneNumber,
+            role: 'client'
+        })
+        await newUser.save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
         res.status(201).send({ message: "User created successfully!" }) //komunikat sukces
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
@@ -31,9 +40,5 @@ router.get("/", async (req, res) => {
         console.log(error.message)
     }
 });
-
-//edyjca?
-
-//usuwanie?
 
 module.exports = router;
