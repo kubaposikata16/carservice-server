@@ -24,8 +24,8 @@ userSchema.methods.generateAuthToken = function () { //generowanie tokenu JWT na
     return token
 };
 
-const CarServiceDB = mongoose.connection.useDb('CarService'); //użycie konkretnej bazy danych
-const User = CarServiceDB.model("User", userSchema); //tworzenie modelu 'User' na podstawie schematu 'userSchema'
+const CarServiceDB = mongoose.connection.useDb('CarService');
+const User = CarServiceDB.model("User", userSchema);
 
 const validate = (data) => {
     const schema = Joi.object({

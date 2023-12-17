@@ -73,8 +73,7 @@ router.delete("/:visitId", currentUser, currentVisit, async (req, res) => {
         res.status(200).send({ data: deletedVisit, message: "Visit deleted successfully" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
-        //console.log(error)
-        console.error(error);
+        console.log(error)
     }
 });
 

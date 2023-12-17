@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken")
 function tokenVerification(req, res, next) {
     console.log("WEJSCIE DO TOKENA")
     let token = req.headers["x-access-token"] //pobranie tokenu z nagłówka
-    //const pokemon = req.data
     if (!token) {
         res.status(403).send({ message: "No token provided!" }); //zwraca status - użytkownik nie ma dostępu
     }

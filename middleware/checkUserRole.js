@@ -9,4 +9,4 @@ const checkUserRole = (requiredRoles) => {
     }
 }
 
-module.exports = checkUserRole;
+module.exports = checkUserRole

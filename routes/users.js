@@ -8,7 +8,7 @@ router.post("/", async (req, res) => {
         if (error) {
             return res.status(400).send({ message: error.details[0].message }) //jeśli błąd - zwraca jaki błąd
         }
-        const { firstName, lastName, email, password, phoneNumber } = req.body;
+        const { firstName, lastName, email, password, phoneNumber } = req.body; //to sprawdzić dlaczego password jest takie
         const existingUser  = await User.findOne({ email: req.body.email }) //sprawdzenie czy istnieje już user z tym samym emailem w bazie danych
         if (existingUser) {
             return res.status(409).send({ message: "User with given email already exist!" }) //jeśli tak zwraca konflikt
@@ -33,12 +33,12 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
     try {
-        const users = await User.find({}) //pobiera wszystkich użytkowników z bazy danych
-        res.status(200).send({ data: users }) //status ok - zwraca użytkowników
+        const users = await User.find({})
+        res.status(200).send({ data: users })
     } catch (error) {
         res.status(500).send({ message: error.message })
         console.log(error.message)
     }
 });
 
-module.exports = router;
+module.exports = router
