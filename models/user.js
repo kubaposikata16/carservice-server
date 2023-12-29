@@ -2,7 +2,7 @@ const mongoose = require("mongoose"); //import biblioteki Mongoose, która jest 
 const Joi = require("joi"); //import biblioteki Joi, która jest używana do walidacji danych w Node.js
 const passwordComplexity = require("joi-password-complexity"); //rozszerzenie dla Joi umożliwiające definiowanie złożoności hasła i walidowanie haseł zgodnie z określonymi kryteriami
 const jwt = require("jsonwebtoken");
-const Roles = require('../roles');
+//const Roles = require('../roles');
 
 const userSchema = new mongoose.Schema({
     firstName: { type: String, required: true },

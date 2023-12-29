@@ -11,9 +11,13 @@ function tokenVerification(req, res, next) {
             console.log("Unauthorized!")
             res.status(401).send({ message: "Unauthorized!" }); //zwraca status - brak dostępu
         }
-        console.log("Token correct, user: " + decodeduser._id)
-        req.user = decodeduser
-        next()
+        if (decodeduser && decodeduser._id) {
+            console.log("Token correct, decoded user _id:", decodeduser._id); // Sprawdź pole _id w decodeduser
+            req.user = decodeduser
+            next()
+        } else {
+            return res.status(401).send({ message: "Unauthorized!" }); // Zwraca status - brak dostępu
+        }
     })
 }
 

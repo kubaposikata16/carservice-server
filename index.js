@@ -23,22 +23,28 @@ app.use(cors())
 const port = process.env.PORT || 8080
 
 //definicja endpointów
-app.post("/users");
-app.get("/users", tokenVerification, checkUserRole(['employee', 'admin']));
+app.post("/users"); //rejestracja - każdy
+app.get("/users/forEmployee", tokenVerification, checkUserRole(['employee'])); //wyświetlanie użytkowników(klientów i pracowników) w systemie - pracownik
+app.get("/users/forAdmin", tokenVerification, checkUserRole(['admin'])); //wyświetlanie użytkowników(wszystkich) w systemie - admin
 
-app.post("/login");
+app.post("/login"); //logowanie - każdy
 
-app.get("/user", tokenVerification, currentUser);
-app.put("/user", tokenVerification, currentUser);
-app.put("/role/:userId", tokenVerification, checkUserRole('admin'));
-app.delete("/user", tokenVerification, currentUser);
+app.get("/user", tokenVerification, currentUser); //wyświetlanie danych zalogowanego użytkownika - każdy
+app.put("/user", tokenVerification, currentUser); //edycja danych zalogowanego użytkownika - każdy
+app.put("/user/:userId", tokenVerification, checkUserRole(['admin'])); //edycja danych dowolnego użytkownika w systemie - admin
+app.put("/user/role/:userId", tokenVerification, currentUser, checkUserRole(['admin'])); //zmienianie roli dowolnego użytkownika w systemie - admin
+app.delete("/user", tokenVerification, currentUser); //usuwanie konta zalogowanego użytkownika - każdy
+app.delete("/user/:userId", tokenVerification, checkUserRole(['admin'])); //usuwanie konta dowolnego użytkownika w systemie - admin
 
-app.post("/forms", tokenVerification, currentUser); //checkUserRole('client') chyba że pracownik też będzie mógł dodać wizyty np jeśli coś mu wypadnie i zadzwoni do klienta i umówi się na nową datę i starą wizytę anuluje i utworzy nową
-app.get("/forms", tokenVerification, checkUserRole(['employee', 'admin']));
+app.post("/forms", tokenVerification, currentUser); //dodawanie nowej wizyty przez zalogowanego użytkownika - klient
+//post dla forms (admin i pracownik mogą dodać wizytę ale z id klienta)
+app.get("/forms", tokenVerification, checkUserRole(['employee', 'admin'])); //wyświetlanie wszystkich wizyt - admin, pracownik
 
-app.get("/form", tokenVerification, currentUser);
-//app.put("/form", tokenVerification, currentUser); //raczej bez tego bo lepiej żeby w razie zmiany czegoś w wizycie anulować ją i zrobić nową
-app.delete("/form/:visitId", tokenVerification, currentUser, currentVisit);
+app.get("/form", tokenVerification, currentUser); //wyświetlanie wizyt zalogowanego użytkownika - każdy ALBO tylko klient bo wsm tylko on umawia
+// put dla form visitId ale tylko z data i godzina (pracownik i klient)
+app.put("/form/status/:visitId", tokenVerification, currentUser, checkUserRole(['employee', 'admin'])); //zmiana statusu wizyty - klient i pracownik
+app.delete("/form/:visitId", tokenVerification, currentUser, currentVisit); //anulowanie wizyty zalogowanego użytkownika
+app.delete("/form/forEmployeeOrAdmin/:visitId", tokenVerification, checkUserRole(['employee', 'admin'])); //anulowanie wizyty dowolnego użytkownika - pracownik i admin
 
 //dodanie routera dla każdej ścieżki
 app.use("/users", usersRoutes);

@@ -42,28 +42,62 @@ router.put("/", currentUser, async (req, res) => {
     }
 });
 
+router.put("/:userId", async (req, res) => {
+    try {
+        const userIdToUpdate = req.params.userId; // Pobranie ID użytkownika do aktualizacji
+        const newData = req.body; // Pobranie danych z żądania do edycji
+
+        const { error } = validateEditUser(newData); // Walidacja danych
+        if (error) {
+            return res.status(400).send({ message: error.details[0].message });
+        }
+
+        const existingUser = await User.findOne({ email: req.body.email });
+        if (existingUser && existingUser._id.toString() !== userIdToUpdate) {
+            return res.status(400).send({ message: "Email already exists in the database" });
+        }
+
+        let updatedData = { ...req.body };
+        if (!req.body.password) {
+            delete updatedData.password;
+        } else {
+            const salt = await bcrypt.genSalt(Number(process.env.SALT));
+            const hashPassword = await bcrypt.hash(req.body.password, salt);
+            updatedData.password = hashPassword;
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(userIdToUpdate, updatedData, { new: true });
+        if (!updatedUser) {
+            return res.status(404).send({ message: "User not found" });
+        }
+
+        res.status(200).send({ data: updatedUser, message: "User updated successfully" });
+    } catch (error) {
+        res.status(500).send({ message: error.message });
+    }
+});
+
 router.put("/role/:userId", currentUser, async (req, res) => {
     try {
-      const { userId } = req.params //pobranie ID użytkownika z parametrów ścieżki
-      const { role } = req.body //pobranie nowej roli z ciała żądania
-  
-      //sprawdzenie, czy aktualnie zalogowany użytkownik jest administratorem
-      if (req.currentUser.role !== 'admin') {
-        return res.status(403).send({ message: "Access forbidden!" })
-      }
-  
-      // Aktualizacja roli użytkownika
-      const updatedUser = await User.findByIdAndUpdate(userId, { role }, { new: true })
-      if (!updatedUser) {
-        return res.status(404).send({ message: "User not found" })
-      }
-  
-      res.status(200).send({ data: updatedUser, message: "User role updated successfully" })
+        const userId = req.params.userId
+        const role = req.body.role
+        //sprawdzenie, czy aktualnie zalogowany użytkownik jest administratorem
+        if (req.currentUser.role !== 'admin') {
+            return res.status(403).send({ message: "Access forbidden!" })
+        }
+        // Pobranie użytkownika z bazy danych na podstawie userId
+        const user = await User.findById(userId)
+        if (!user) {
+            return res.status(404).send({ message: "User not found" })
+        }
+        // Aktualizacja roli użytkownika
+        user.role = role;
+        const updatedUser = await user.save()
+        res.status(200).send({ data: updatedUser, message: "User role updated successfully" })
     } catch (error) {
-      res.status(500).send({ message: error.message })
+        res.status(500).send({ message: error.message })
     }
-  });
-  
+});
 
 router.delete("/", currentUser, async (req, res) => {
     try {
@@ -75,6 +109,19 @@ router.delete("/", currentUser, async (req, res) => {
         res.status(200).send({ data: deletedUser, message: "User deleted successfully" }) //jeśli usunięty - zwraca sukces
     } catch (error) {
         res.status(500).send({ message: error.message });
+    }
+});
+
+router.delete("/:userId", async (req, res) => {
+    try {
+        const userIdToDelete = req.params.userId; // Pobranie ID użytkownika do usunięcia
+        const deletedUser = await User.findByIdAndDelete(userIdToDelete)
+        if (!deletedUser) {
+            return res.status(404).send({ message: "User not found" })
+        }
+        res.status(200).send({ data: deletedUser, message: "User deleted successfully" })
+    } catch (error) {
+        res.status(500).send({ message: error.message })
     }
 });
 

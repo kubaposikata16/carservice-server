@@ -22,6 +22,14 @@ router.post("/", currentUser, async (req, res) => {
             registrationNumber: req.body.registrationNumber,
             createdBy: req.currentUser._id
         })*/
+        // Sprawdź, czy istnieje już wizyta na podaną datę i godzinę
+        const existingVisit = await Visit.findOne({
+            date: req.body.date,
+            time: req.body.time,
+        })
+        if (existingVisit) {
+            return res.status(400).send({ message: "This time slot is already booked!" })
+        }
         await new Visit({ ...req.body, createdBy: req.currentUser._id }).save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
         //await newVisit.save(); //zapisywanie obiektu do bazy danych
         res.status(201).send({ message: "Visit created successfully!" }) //komunikat o utworzonej wizycie

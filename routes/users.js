@@ -31,9 +31,20 @@ router.post("/", async (req, res) => {
     }
 });
 
-router.get("/", async (req, res) => {
+router.get("/forAdmin", async (req, res) => {
     try {
         const users = await User.find({})
+        res.status(200).send({ data: users })
+    } catch (error) {
+        res.status(500).send({ message: error.message })
+        console.log(error.message)
+    }
+});
+
+router.get("/forEmployee", async (req, res) => {
+    try {
+        // Pobranie użytkowników z rangami 'client' i 'employee'
+        const users = await User.find({ role: { $in: ['client', 'employee'] } })
         res.status(200).send({ data: users })
     } catch (error) {
         res.status(500).send({ message: error.message })

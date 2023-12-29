@@ -38,6 +38,11 @@ const visitSchema = new mongoose.Schema({
     engine: { type: Number, required: true },
     vin: { type: String, required: true },
     registrationNumber: { type: String, required: true},
+    status: {
+        type: String,
+        enum: ['in progress', 'finished',],
+        default: 'in progress' //domyślna rola dla nowych użytkowników
+    },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } //pole określające autora wizyty
 }, { collection: "Visits" });
 
