@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { Visit, validate } = require("../models/visit");
 const currentUser = require('../middleware/currentUser');
+const mongoose = require("mongoose");
 
 router.post("/", currentUser, async (req, res) => {
 	try {
@@ -53,13 +54,30 @@ router.get("/userVisits/:userId", async (req, res) => {
     try {
         const userId = req.params.userId
         // Pobranie wizyt danego użytkownika na podstawie jego ID
-        const userVisits = await Visit.find({ createdBy: userId });
+        const userVisits = await Visit.find({ createdBy: userId })
         if (!userVisits) {
             return res.status(404).send({ message: "User visits not found" })
         }
         res.status(200).send({ data: userVisits })
     } catch (error) {
         res.status(500).send({ message: error.message })
+    }
+});
+
+router.get('/available-hours/:date', async (req, res) => {
+    try {
+        const requestedDate = req.params.date
+        // Pobranie godzin zdefiniowanych w schemacie
+        const definedHours = Visit.schema.path('time').enumValues
+        // Sprawdzenie zajętych godzin dla danego dnia w bazie danych
+        const occupiedHours = await Visit.find({ date: requestedDate }, 'time')
+        const occupiedTimes = occupiedHours.map(visit => visit.time)
+        // Filtrowanie dostępnych godzin na podstawie zdefiniowanych godzin i zajętych godzin
+        const availableHours = definedHours.filter(hour => !occupiedTimes.includes(hour))
+        res.status(200).json({ availableHours })
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Internal Server Error' })
     }
 });
 

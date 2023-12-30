@@ -2,26 +2,33 @@ const mongoose = require("mongoose");
 const Joi = require("joi");
 
 const serviceEnum = {
-    "Naprawy i usterki": ["Naprawy i usterki"],
-    "Koła i opony": ["Wymiana opon", "wymiana kół"],
-    "Obsługa okresowa": ["Wymiana oleju", "Przegląd okresowy", "Przegląd przed zakupem"],
-    "Hamulce": ["Wymiana klocków hamulcowych", "Wymiana tarcz hamulcowych", "Wymiana płynu hamulcowego"],
+    "Badania techniczne": ["Badania techniczne"],
     "Diagnostyka": ["Diagnostyka komputerowa"],
     "Geometria i zbieżność": ["Geometria i zbieżność"],
-    "Klimatyzacja": ["Diagnostyka niedziałającej klimatyzacji","Wymiana filtra"],
-    "Badania techniczne": ["Badania techniczne"]
+    "Hamulce": ["Wymiana klocków hamulcowych", "Wymiana płynu hamulcowego", "Wymiana tarcz hamulcowych"],
+    "Klimatyzacja": ["Diagnostyka niedziałającej klimatyzacji", "Wymiana filtra"],
+    "Koła i opony": ["Wymiana kół", "Wymiana opon"],
+    "Naprawy i usterki": ["Naprawy i usterki"],
+    "Obsługa okresowa": ["Przegląd okresowy", "Przegląd przed zakupem", "Wymiana oleju"],
 };
 
 const carModelEnum = {
-    Volkswagen: ["Amarok", "Passat"],
-    Opel: ["GT", "Insignia"],
-    Ford: ["Mondeo", "Focus"],
-    BMW: ["M3", "M4", "M5"],
-    Audi: ["A3","A4"],
-    "Mercedes-Benz": ["AMG GT","Klasa G"],
-    Toyota: ["Auris","Supra"],
-    Renault: ["Clio","Twingo"],
-    Skoda: ["Octavia","Fabia"]
+    "Audi": ["A1", "A3", "A4", "A5", "A6", "Q3", "Q5"],
+    "BMW": ["M3", "M4", "M5", "Seria 1", "Seria 3", "Seria 5", "X1", "X3", "X5"],
+    "Chevrolet": ["Camaro", "Corvette", "Cruze", "Malibu", "Spark", "Trax"],
+    "Citroen": ["Berlingo", "C1", "C3", "C4", "C5", "Cactus"],
+    "Fiat": ["500", "500L", "500X", "Panda", "Punto", "Tipo"],
+    "Ford": ["EcoSport", "Fiesta", "Focus", "Kuga", "Mondeo", "Mustang"],
+    "Honda": ["Accord", "Civic", "City", "CR-V", "HR-V", "Jazz"],
+    "Hyundai": ["i20", "i30", "Kona", "Santa Fe", "Sonata", "Tucson"],
+    "Mercedes-Benz": ["AMG GT", "GLC", "Klasa A", "Klasa C", "Klasa E", "Klasa G"],
+    "Nissan": ["Juke", "Leaf", "Micra", "Navara", "Qashqai", "X-Trail"],
+    "Opel": ["Astra", "Corsa", "Crossland", "Grandland", "Insignia", "Mokka"],
+    "Renault": ["Captur", "Clio", "Duster", "Kadjar", "Megane", "Scenic", "Twingo"],
+    "SEAT": ["Alhambra", "Arona", "Ateca", "Ibiza", "Leon", "Tarraco"],
+    "Skoda": ["Fabia", "Karoq", "Kodiaq", "Octavia", "Scala", "Superb"],
+    "Toyota": ["Auris", "Aygo", "Camry", "Corolla", "RAV4", "Yaris"],
+    "Volkswagen": ["Arteon", "Golf", "Passat", "Polo", "T-Roc", "Tiguan"],
 };
 
 const visitSchema = new mongoose.Schema({
@@ -33,6 +40,10 @@ const visitSchema = new mongoose.Schema({
     time: { type: String, enum: ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
         "11:00", "11:30", "12:00", "12:30", "13:00", 
         "13:30", "14:00", "14:30", "15:00"], required: true },
+    /*time: {timeOptions: [{hour:"8:00", isValid: true}, {hour:"8:30", isValid: true}, {hour:"9:00", isValid: true}, {hour:"9:30", isValid: true},
+    {hour:"10:00", isValid: true}, {hour:"10:30", isValid: true}, {hour:"11:00", isValid: true}, {hour:"11:30", isValid: true}, 
+    {hour:"12:00", isValid: true}, {hour:"12:30", isValid: true}, {hour:"13:00", isValid: true}, {hour:"13:30", isValid: true}, 
+    {hour:"14:00", isValid: true}, {hour:"14:30", isValid: true}, {hour:"15:00", isValid: true}], required: true },*/
     moreInfo: { type: String, required: false },
     carProductionYear: { type: Number, required: true },
     engine: { type: Number, required: true },
@@ -79,6 +90,14 @@ const validate = (data) => {
             return value;
         }),
         time: Joi.string().required().label("Time"),
+        /*time: Joi.object({
+            timeOptions: Joi.array().items(
+              Joi.object({
+                hour: Joi.string().required(),
+                isValid: Joi.boolean().required()
+              })).required(),
+              required: Joi.boolean().valid(true).required()
+            }).required().label("Time"),*/
         moreInfo: Joi.string().allow("").label("More info"),
         carProductionYear: Joi.number().required().min(1886).max(2023).label("Car production year"),
         engine: Joi.number().required().min(0.5).max(8.0).label("Engine"),

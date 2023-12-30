@@ -40,6 +40,7 @@ app.delete("/user/:userId", tokenVerification, checkUserRole(['admin'])); //usuw
 app.post("/forms", tokenVerification, currentUser); //dodawanie nowej wizyty przez zalogowanego użytkownika - klient
 app.get("/forms", tokenVerification, checkUserRole(['employee', 'admin'])); //wyświetlanie wszystkich wizyt - admin, pracownik
 app.get("/forms/userVisits/:visitId", tokenVerification, checkUserRole(['employee', 'admin'])); //wyświetlanie wizyt danego użytkownika - pracownik, admin
+app.get("available-hours/:date", tokenVerification); //wyświetlanie dostępnych godzin
 
 app.get("/form", tokenVerification, currentUser); //wyświetlanie wizyt zalogowanego użytkownika - każdy ALBO tylko klient bo wsm tylko on umawia
 app.put("/form/status/:visitId", tokenVerification, currentUser, checkUserRole(['employee', 'admin'])); //zmiana statusu wizyty - pracownik i admin
