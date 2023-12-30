@@ -13,6 +13,26 @@ router.get("/", currentUser, async (req, res) => {
     }
 });
 
+router.get("/:userId", async (req, res) => {
+    try {
+        const userId = req.params.userId // Pobranie ID z parametru ścieżki
+        const user = await User.findById(userId)
+        if (!user) {
+            return res.status(404).send({ message: "User not found" })
+        }
+        const userData = {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            email: user.email,
+            phoneNumber: user.phoneNumber
+        };
+
+        res.status(200).send({ data: userData, message: "User details" })
+    } catch (error) {
+        res.status(500).send({ message: error.message })
+    }
+});
+
 router.put("/", currentUser, async (req, res) => {
     try {
         const newData = req.body; //pobranie danych z żądania do edycji

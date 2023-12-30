@@ -49,4 +49,18 @@ router.get("/", async (req, res) => {
     }
 });
 
+router.get("/userVisits/:userId", async (req, res) => {
+    try {
+        const userId = req.params.userId
+        // Pobranie wizyt danego użytkownika na podstawie jego ID
+        const userVisits = await Visit.find({ createdBy: userId });
+        if (!userVisits) {
+            return res.status(404).send({ message: "User visits not found" })
+        }
+        res.status(200).send({ data: userVisits })
+    } catch (error) {
+        res.status(500).send({ message: error.message })
+    }
+});
+
 module.exports = router;

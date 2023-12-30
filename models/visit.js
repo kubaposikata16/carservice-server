@@ -40,8 +40,8 @@ const visitSchema = new mongoose.Schema({
     registrationNumber: { type: String, required: true},
     status: {
         type: String,
-        enum: ['in progress', 'finished',],
-        default: 'in progress' //domyślna rola dla nowych użytkowników
+        enum: ['Oczekuje na potwierdzenie', 'Zaakceptowano', 'W trakcie realizacji', 'Zakończono', 'Odwołano'],
+        default: 'Oczekuje na potwierdzenie' //domyślna rola dla nowych użytkowników
     },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } //pole określające autora wizyty
 }, { collection: "Visits" });
