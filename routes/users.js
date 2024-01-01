@@ -24,7 +24,8 @@ router.post("/", async (req, res) => {
             role: 'client'
         })
         await newUser.save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
-        res.status(201).send({ message: "User created successfully!" }) //komunikat sukces
+        const token = newUser.generateAuthToken() //od razu zalogowany po rejestracji
+        res.status(201).send({ data: token, message: "User created successfully!" }) //komunikat sukces
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
         console.log(error.message)
