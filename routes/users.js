@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { User, validate } = require("../models/user"); //pobieranie modelu User
 const bcrypt = require("bcrypt"); //biblioteka, która zapewnia haszowanie
+const { userAccountCreated } = require("../emailNotifications")
 
 router.post("/", async (req, res) => {
     try {
@@ -24,6 +25,8 @@ router.post("/", async (req, res) => {
             role: 'client'
         })
         await newUser.save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
+        // Wysłanie maila z potwierdzeniem rejestracji
+        await userAccountCreated(email);
         const token = newUser.generateAuthToken() //od razu zalogowany po rejestracji
         res.status(201).send({ data: token, message: "User created successfully!" }) //komunikat sukces
     } catch (error) {

@@ -2,6 +2,7 @@ const router = require("express").Router();
 const { Visit, validate } = require("../models/visit");
 const currentUser = require('../middleware/currentUser');
 const mongoose = require("mongoose");
+const { userVisitCreated } = require("../emailNotifications")
 
 router.post("/", currentUser, async (req, res) => {
 	try {
@@ -31,8 +32,12 @@ router.post("/", currentUser, async (req, res) => {
         if (existingVisit) {
             return res.status(400).send({ message: "This time slot is already booked!" })
         }
-        await new Visit({ ...req.body, createdBy: req.currentUser._id }).save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
+        //await new Visit({ ...req.body, createdBy: req.currentUser._id }).save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
+        const newVisit = new Visit({ ...req.body, createdBy: req.currentUser._id })
+        const savedVisit = await newVisit.save() // Zapisz wizytę i przechwyć zwrócony obiekt
+        const newVisitId = savedVisit._id // Pobierz _id z zapisanej wizyty
         //await newVisit.save(); //zapisywanie obiektu do bazy danych
+        await userVisitCreated(req.currentUser.email, req.body, newVisitId)
         res.status(201).send({ message: "Visit created successfully!" }) //komunikat o utworzonej wizycie
 	} catch (error) {
 		res.status(500).send({ message: "Internal Server Error" })

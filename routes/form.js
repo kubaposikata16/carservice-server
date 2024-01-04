@@ -1,7 +1,9 @@
 const router = require("express").Router();
+const { User } = require("../models/user")
 const { Visit, validate } = require("../models/visit");
 const currentUser = require('../middleware/currentUser');
 const currentVisit = require('../middleware/currentVisit');
+const { userVisitCanceled, statusChanged, visitCanceled } = require("../emailNotifications")
 
 router.get("/", currentUser, async (req, res) => {
     try {
@@ -19,6 +21,7 @@ router.put("/status/:visitId", currentUser, async (req, res) => {
         const newStatus = req.body.status
         // Pobranie wizyty z bazy danych na podstawie visitId
         const visit = await Visit.findById(visitId)
+        //.populate('createdBy', 'email')
         if (!visit) {
             return res.status(404).send({ message: "Visit not found" })
         }
@@ -28,6 +31,11 @@ router.put("/status/:visitId", currentUser, async (req, res) => {
         }
         visit.status = newStatus
         await visit.save()
+        const createdByUser = await User.findById(visit.createdBy);
+        if (!createdByUser) {
+            return res.status(404).send({ message: "User not found" });
+        }
+        await statusChanged(createdByUser.email, newStatus)
         return res.status(200).send({ data: visit, message: "Visit status updated successfully" })
     } catch (error) {
         res.status(500).send({ message: error.message })
@@ -60,6 +68,7 @@ router.delete("/:visitId", currentUser, currentVisit, async (req, res) => {
         if (!deletedVisit) {
             return res.status(404).send({ message: "Visit not found" })
         }
+        await userVisitCanceled(req.currentUser.email, visitId)
         res.status(200).send({ data: deletedVisit, message: "Visit deleted successfully" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
@@ -70,14 +79,31 @@ router.delete("/:visitId", currentUser, currentVisit, async (req, res) => {
 router.delete("/forEmployeeOrAdmin/:visitId", async (req, res) => {
     try {
         const visitId = req.params.visitId
+        
         const visitToDelete = await Visit.findById(visitId)
+        //const email = visitToDelete.createdBy.email;
+        //console.log("email=", email)
         if (!visitToDelete) {
             return res.status(404).send({ message: "Visit not found" })
         }
+        const createdByUserId = visitToDelete.createdBy;
+        // Tutaj używamy referencji bez populate, tylko do uzyskania adresu e-mail użytkownika
+        const user = await User.findById(createdByUserId);
+        if (!user) {
+            return res.status(404).send({ message: "User not found" });
+        }
+        const email = user.email;
+        //const email = visitToDelete.createdBy.email
+        /*const createdByUser = visitToDelete.createdBy;
+        if (!createdByUser) {
+            return res.status(404).send({ message: "User not found" });
+        }*/
+        //const email = createdByUser.email; // Pobranie adresu e-mail użytkownika
         const deletedVisit = await Visit.findByIdAndDelete(visitId)
         if (!deletedVisit) {
             return res.status(404).send({ message: "Visit not found" })
         }
+        await visitCanceled(email, visitId);
         res.status(200).send({ data: deletedVisit, message: "Visit deleted successfully" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })

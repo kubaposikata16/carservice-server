@@ -36,6 +36,8 @@ app.put("/user/:userId", tokenVerification, checkUserRole(['admin'])); //edycja 
 app.put("/user/role/:userId", tokenVerification, currentUser, checkUserRole(['admin'])); //zmienianie roli dowolnego użytkownika w systemie - admin
 app.delete("/user", tokenVerification, currentUser); //usuwanie konta zalogowanego użytkownika - każdy
 app.delete("/user/:userId", tokenVerification, checkUserRole(['admin'])); //usuwanie konta dowolnego użytkownika w systemie - admin
+app.post("/user/reset-password"); //podanie emaila i wsyłanie wiadomości z linkiem na pocztę
+app.put("/user/reset-password/:token"); //edycja hasła poprzez link z maila
 
 app.post("/forms", tokenVerification, currentUser); //dodawanie nowej wizyty przez zalogowanego użytkownika - klient
 app.get("/forms", tokenVerification, checkUserRole(['employee', 'admin'])); //wyświetlanie wszystkich wizyt - admin, pracownik

@@ -14,7 +14,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['client', 'employee', 'admin'],
         default: 'client' //domyślna rola dla nowych użytkowników
-    }
+    },
+    resetPasswordToken: String,
+    resetPasswordTokenCreatedAt: Date
 }, { collection: "UserAccounts" });
 
 userSchema.methods.generateAuthToken = function () { //generowanie tokenu JWT na podstawie id użytkownika
