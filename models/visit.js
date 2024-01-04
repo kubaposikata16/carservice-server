@@ -40,10 +40,6 @@ const visitSchema = new mongoose.Schema({
     time: { type: String, enum: ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
         "11:00", "11:30", "12:00", "12:30", "13:00", 
         "13:30", "14:00", "14:30", "15:00"], required: true },
-    /*time: {timeOptions: [{hour:"8:00", isValid: true}, {hour:"8:30", isValid: true}, {hour:"9:00", isValid: true}, {hour:"9:30", isValid: true},
-    {hour:"10:00", isValid: true}, {hour:"10:30", isValid: true}, {hour:"11:00", isValid: true}, {hour:"11:30", isValid: true}, 
-    {hour:"12:00", isValid: true}, {hour:"12:30", isValid: true}, {hour:"13:00", isValid: true}, {hour:"13:30", isValid: true}, 
-    {hour:"14:00", isValid: true}, {hour:"14:30", isValid: true}, {hour:"15:00", isValid: true}], required: true },*/
     moreInfo: { type: String, required: false },
     carProductionYear: { type: Number, required: true },
     engine: { type: Number, required: true },
@@ -58,14 +54,14 @@ const visitSchema = new mongoose.Schema({
 }, { collection: "Visits" });
 
 visitSchema.path("service").validate(function(value) { //udostępnienie wartości dla konkretnego serviceType
-    return this.serviceType && serviceEnum[this.serviceType].includes(value);
+    return this.serviceType && serviceEnum[this.serviceType].includes(value)
 }, "Invalid service for selected service type");
 
 visitSchema.path("carModel").validate(function(value) { //udostępnienie wartości dla konkretnego carBrand
-    return this.carBrand && carModelEnum[this.carBrand].includes(value);
+    return this.carBrand && carModelEnum[this.carBrand].includes(value)
 }, "Invalid car model for selected car brand");
 
-const VisitDB = mongoose.connection.useDb("CarService"); // Użycie konkretnej bazy danych
+const VisitDB = mongoose.connection.useDb("CarService"); //użycie konkretnej bazy danych
 const Visit = VisitDB.model("Visit", visitSchema);
 
 const validate = (data) => {
@@ -78,33 +74,25 @@ const validate = (data) => {
         }).label("Service"),
         carBrand: Joi.string().valid(...Object.keys(carModelEnum)).required().label("Car brand"),
         carModel: Joi.string().when("carBrand", {
-            is: Joi.exist(), //jeśli pole carBran istnieje
+            is: Joi.exist(), //jeśli pole carBrand istnieje
             then: Joi.valid(...[].concat(...Object.values(carModelEnum))), //carModel zgodny z wartościami w carBrand
             otherwise: Joi.forbidden() //inaczej zabronione, czyli nie można użyć
         }).label("Car model"),
         date: Joi.date().required().iso().min("now").label("Date").custom((value, helpers) => { //iso - format ISO (YYYY-MM-DD); min(now) - data conajmniej bieżąca(dzisiaj)
-            const day = value.getDay(); //pobranie numeru dnia w tygodniu (0 - niedziela, 1 - poniedziałek, ...)
+            const day = value.getDay() //pobranie numeru dnia w tygodniu (0 - niedziela, 1 - poniedziałek, ...)
             if (day === 0 ) { //sprawdzenie niedziela (0)
-                return helpers.message("Date must be a weekday (Monday-Saturday");
+                return helpers.message("Date must be a weekday (Monday-Saturday")
             }
-            return value;
+            return value
         }),
         time: Joi.string().required().label("Time"),
-        /*time: Joi.object({
-            timeOptions: Joi.array().items(
-              Joi.object({
-                hour: Joi.string().required(),
-                isValid: Joi.boolean().required()
-              })).required(),
-              required: Joi.boolean().valid(true).required()
-            }).required().label("Time"),*/
         moreInfo: Joi.string().allow("").label("More info"),
         carProductionYear: Joi.number().required().min(1886).max(2023).label("Car production year"),
         engine: Joi.number().required().min(0.5).max(8.0).label("Engine"),
         vin: Joi.string().required().pattern(new RegExp('^[A-HJ-NPR-Z0-9]{17}$')).label("VIN"),
         registrationNumber: Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{3,8}$')).label("Registration number")
     }).options({ abortEarly: false }); //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego
-    
-    return schema.validate(data);
+    return schema.validate(data)
 }
+
 module.exports = { Visit, validate };

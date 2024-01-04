@@ -1,22 +1,22 @@
 const router = require("express").Router();
-const { User, validate } = require("../models/user"); //pobieranie modelu User
+const { User, validate } = require("../models/user");
 const bcrypt = require("bcrypt"); //biblioteka, która zapewnia haszowanie
-const { userAccountCreated } = require("../emailNotifications")
+const { userAccountCreated } = require("../emailNotifications");
 
 router.post("/", async (req, res) => {
     try {
-        const { error } = validate(req.body) //walidacja
+        const { error } = validate(req.body)
         if (error) {
-            return res.status(400).send({ message: error.details[0].message }) //jeśli błąd - zwraca jaki błąd
+            return res.status(400).send({ message: error.details[0].message })
         }
-        const { firstName, lastName, email, password, phoneNumber } = req.body; //to sprawdzić dlaczego password jest takie
-        const existingUser  = await User.findOne({ email: req.body.email }) //sprawdzenie czy istnieje już user z tym samym emailem w bazie danych
+        const { firstName, lastName, email, password, phoneNumber } = req.body;
+        const existingUser  = await User.findOne({ email: req.body.email })
         if (existingUser) {
-            return res.status(409).send({ message: "User with given email already exist!" }) //jeśli tak zwraca konflikt
-        } //jeśli nie
+            return res.status(409).send({ message: "User with given email already exist!" })
+        }
         const salt = await bcrypt.genSalt(Number(process.env.SALT)) //generuje salt używany do haszowania hasła
         const hashPassword = await bcrypt.hash(req.body.password, salt) //haszowanie za pomocą salt i bcrypt
-        const newUser = new User({
+        const newUser = new User({ //tworzenie obiektu
             firstName,
             lastName,
             email,
@@ -24,11 +24,10 @@ router.post("/", async (req, res) => {
             phoneNumber,
             role: 'client'
         })
-        await newUser.save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
-        // Wysłanie maila z potwierdzeniem rejestracji
+        await newUser.save() //zapisanie go do bazy danych
         await userAccountCreated(email);
         const token = newUser.generateAuthToken() //od razu zalogowany po rejestracji
-        res.status(201).send({ data: token, message: "User created successfully!" }) //komunikat sukces
+        res.status(201).send({ data: token, message: "User created successfully!" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
         console.log(error.message)
@@ -47,7 +46,6 @@ router.get("/forAdmin", async (req, res) => {
 
 router.get("/forEmployee", async (req, res) => {
     try {
-        // Pobranie użytkowników z rangami 'client' i 'employee'
         const users = await User.find({ role: { $in: ['client', 'employee'] } })
         res.status(200).send({ data: users })
     } catch (error) {
@@ -56,4 +54,4 @@ router.get("/forEmployee", async (req, res) => {
     }
 });
 
-module.exports = router
+module.exports = router;

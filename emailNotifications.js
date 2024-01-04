@@ -1,5 +1,4 @@
 const nodemailer = require("nodemailer");
-const { Visit, validate } = require("./models/visit");
 
 /*
 const transporter = nodemailer.createTransport({

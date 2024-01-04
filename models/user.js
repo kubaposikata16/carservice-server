@@ -1,8 +1,7 @@
-const mongoose = require("mongoose"); //import biblioteki Mongoose, która jest wspraciem dla MongoDB umożliwiającym ławe korzystanie z MongoDB w środowisku Node.js
+const mongoose = require("mongoose"); //import biblioteki Mongoose, która jest wspraciem dla MongoDB umożliwiającym łatwe korzystanie z MongoDB w środowisku Node.js
 const Joi = require("joi"); //import biblioteki Joi, która jest używana do walidacji danych w Node.js
 const passwordComplexity = require("joi-password-complexity"); //rozszerzenie dla Joi umożliwiające definiowanie złożoności hasła i walidowanie haseł zgodnie z określonymi kryteriami
 const jwt = require("jsonwebtoken");
-//const Roles = require('../roles');
 
 const userSchema = new mongoose.Schema({
     firstName: { type: String, required: true },
@@ -36,7 +35,7 @@ const validate = (data) => {
         email: Joi.string().email().required().label("Email"),
         password: passwordComplexity().min(8).required().label("Password"),
         phoneNumber: Joi.string().required().length(9).pattern(/^\d+$/).label("Phone Number")
-    }).options({ abortEarly: false }); //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego (chyba nie działa xd)
+    }).options({ abortEarly: false }) //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego (chyba nie działa xd)
     return schema.validate(data)
 };
 
@@ -55,7 +54,7 @@ const validateEditUser = (data) => {
         email: Joi.string().email().optional().label("Email"),
         password: passwordComplexity().min(8).optional().label("Password"),
         phoneNumber: Joi.string().length(9).pattern(/^\d+$/).optional().label("Phone Number")
-    }).options({ abortEarly: false }); //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego
+    }).options({ abortEarly: false }) //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego
     return schema.validate(data)
 };
 

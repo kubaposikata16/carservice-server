@@ -1,30 +1,15 @@
 const router = require("express").Router();
 const { Visit, validate } = require("../models/visit");
 const currentUser = require('../middleware/currentUser');
-const mongoose = require("mongoose");
 const { userVisitCreated } = require("../emailNotifications")
 
 router.post("/", currentUser, async (req, res) => {
 	try {
-		const { error } = validate(req.body) //walidacja
-		if(error) { //jeśli błąd w walidacji
-			return res.status(400).send({ message: error.details[0].message }) //message jaki błąd
-		}/*
-		const newVisit = new Visit({ //tworzenie obiektu na podstawie wcześniej utworzonego modelu
-            serviceType: req.body.serviceType,
-            service: req.body.service,
-            carBrand: req.body.carBrand,
-            carModel: req.body.carModel,
-			date: req.body.date,
-            time: req.body.time,
-            moreInfo: req.body.moreInfo,
-            carProductionYear: req.body.carProductionYear,
-            engine: req.body.engine,
-            vin: req.body.vin,
-            registrationNumber: req.body.registrationNumber,
-            createdBy: req.currentUser._id
-        })*/
-        // Sprawdź, czy istnieje już wizyta na podaną datę i godzinę
+		const { error } = validate(req.body)
+		if(error) {
+			return res.status(400).send({ message: error.details[0].message })
+		}
+        //sprawdź, czy istnieje już wizyta na podaną datę i godzinę
         const existingVisit = await Visit.findOne({
             date: req.body.date,
             time: req.body.time,
@@ -32,13 +17,11 @@ router.post("/", currentUser, async (req, res) => {
         if (existingVisit) {
             return res.status(400).send({ message: "This time slot is already booked!" })
         }
-        //await new Visit({ ...req.body, createdBy: req.currentUser._id }).save() //tworzy nowy obiekt User z danymi przesłanymi i zapisuje do bazy
         const newVisit = new Visit({ ...req.body, createdBy: req.currentUser._id })
-        const savedVisit = await newVisit.save() // Zapisz wizytę i przechwyć zwrócony obiekt
-        const newVisitId = savedVisit._id // Pobierz _id z zapisanej wizyty
-        //await newVisit.save(); //zapisywanie obiektu do bazy danych
+        const savedVisit = await newVisit.save()
+        const newVisitId = savedVisit._id
         await userVisitCreated(req.currentUser.email, req.body, newVisitId)
-        res.status(201).send({ message: "Visit created successfully!" }) //komunikat o utworzonej wizycie
+        res.status(201).send({ message: "Visit created successfully!" })
 	} catch (error) {
 		res.status(500).send({ message: "Internal Server Error" })
 		console.log(error)
@@ -47,8 +30,8 @@ router.post("/", currentUser, async (req, res) => {
 
 router.get("/", async (req, res) => {
     try {
-        const users = await Visit.find({}) //pobiera wizyty z bazy danych
-        res.status(200).send({ data: users }) //status ok - zwraca wizyty
+        const users = await Visit.find({})
+        res.status(200).send({ data: users })
     } catch (error) {
         res.status(500).send({ message: error.message })
 		console.log(error.message)
@@ -58,7 +41,6 @@ router.get("/", async (req, res) => {
 router.get("/userVisits/:userId", async (req, res) => {
     try {
         const userId = req.params.userId
-        // Pobranie wizyt danego użytkownika na podstawie jego ID
         const userVisits = await Visit.find({ createdBy: userId })
         if (!userVisits) {
             return res.status(404).send({ message: "User visits not found" })
@@ -72,12 +54,12 @@ router.get("/userVisits/:userId", async (req, res) => {
 router.get('/available-hours/:date', async (req, res) => {
     try {
         const requestedDate = req.params.date
-        // Pobranie godzin zdefiniowanych w schemacie
+        //pobranie godzin zdefiniowanych w schemacie
         const definedHours = Visit.schema.path('time').enumValues
-        // Sprawdzenie zajętych godzin dla danego dnia w bazie danych
+        //sprawdzenie zajętych godzin dla danego dnia w bazie danych
         const occupiedHours = await Visit.find({ date: requestedDate }, 'time')
         const occupiedTimes = occupiedHours.map(visit => visit.time)
-        // Filtrowanie dostępnych godzin na podstawie zdefiniowanych godzin i zajętych godzin
+        //filtrowanie dostępnych godzin na podstawie zdefiniowanych godzin i zajętych godzin
         const availableHours = definedHours.filter(hour => !occupiedTimes.includes(hour))
         res.status(200).json({ availableHours })
     } catch (error) {

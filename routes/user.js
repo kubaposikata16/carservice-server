@@ -1,23 +1,21 @@
-const router = require("express").Router()
+const router = require("express").Router();
 const currentUser = require('../middleware/currentUser');
-const { User, validate, validateEditUser } = require("../models/user")
-const bcrypt = require("bcrypt"); //biblioteka, która zapewnia haszowanie
-//const mongoose = require('mongoose');
-//const { ObjectId } = mongoose.Types;
+const { User, validateEditUser } = require("../models/user");
+const bcrypt = require("bcrypt");
 const crypto = require("crypto");
-const { userDataChanged, userAccountDeleted, dataChanged, accountDeleted, sendResetEmail } = require("../emailNotifications")
+const { userDataChanged, userAccountDeleted, dataChanged, accountDeleted, sendResetEmail } = require("../emailNotifications");
 
 router.get("/", currentUser, async (req, res) => {
     try {
-        res.status(200).send({ data: req.currentUser, message: "User details" }); //użycie req.currentUser aby uzyskać dostęp do zalogowanego użytkownika
+        res.status(200).send({ data: req.currentUser, message: "User details" })
     } catch (error) {
-        res.status(500).send({ message: error.message });
+        res.status(500).send({ message: error.message })
     }
 });
 
 router.get("/:userId", async (req, res) => {
     try {
-        const userId = req.params.userId // Pobranie ID z parametru ścieżki
+        const userId = req.params.userId
         const user = await User.findById(userId)
         if (!user) {
             return res.status(404).send({ message: "User not found" })
@@ -27,8 +25,7 @@ router.get("/:userId", async (req, res) => {
             lastName: user.lastName,
             email: user.email,
             phoneNumber: user.phoneNumber
-        };
-
+        }
         res.status(200).send({ data: userData, message: "User details" })
     } catch (error) {
         res.status(500).send({ message: error.message })
@@ -37,39 +34,39 @@ router.get("/:userId", async (req, res) => {
 
 router.put("/", currentUser, async (req, res) => {
     try {
-        const newData = req.body; //pobranie danych z żądania do edycji
-        const { error } = validateEditUser(newData); //walidacja
+        const newData = req.body
+        const { error } = validateEditUser(newData)
         if (error) {
-            return res.status(400).send({ message: error.details[0].message }) //jeśli błąd - zwraca jaki błąd
+            return res.status(400).send({ message: error.details[0].message })
         }
-        const existingUser = await User.findOne({ email: req.body.email });
+        const existingUser = await User.findOne({ email: req.body.email })
         if (existingUser && existingUser._id.toString() !== req.currentUser._id.toString()) {
-            return res.status(400).send({ message: "Email already exists in the database" }) //jeśli istnieje użytkownik o tym samym emailu (nie ten sam co aktualnie zalogowany), zwróć błąd
+            return res.status(400).send({ message: "Email already exists in the database" })
         }
-        let updatedData = { ...req.body };
+        let updatedData = { ...req.body }
         if (!req.body.password) {
-            delete updatedData.password; // Jeśli nie przekazano nowego hasła, usuń pole "password" z obiektu do aktualizacji
+            delete updatedData.password //jeśli nie przekazano nowego hasła, usuń pole "password" z obiektu do aktualizacji
         } else {
-            const salt = await bcrypt.genSalt(Number(process.env.SALT)) //generuje salt używany do haszowania hasła
-            const hashPassword = await bcrypt.hash(req.body.password, salt) //haszowanie za pomocą salt i bcrypt
-            updatedData.password = hashPassword; // Zaktualizuj hasło w danych do aktualizacji
+            const salt = await bcrypt.genSalt(Number(process.env.SALT))
+            const hashPassword = await bcrypt.hash(req.body.password, salt)
+            updatedData.password = hashPassword
         }
-        const updatedUser = await User.findByIdAndUpdate(req.currentUser._id, updatedData, { new: true }) //użycie req.currentUser i aktualizacja danych
+        const updatedUser = await User.findByIdAndUpdate(req.currentUser._id, updatedData, { new: true }) 
         if (!updatedUser) {
             return res.status(404).send({ message: "User not found" })
         }
         await userDataChanged(req.currentUser.email)
-        res.status(200).send({ data: updatedUser, message: "User updated successfully" }) //status ok - update danych
+        res.status(200).send({ data: updatedUser, message: "User updated successfully" })
     } catch (error) {
-        res.status(500).send({ message: error.message });
+        res.status(500).send({ message: error.message })
     }
 });
 
 router.put("/:userId", async (req, res) => {
     try {
-        const userIdToUpdate = req.params.userId; // Pobranie ID użytkownika do aktualizacji
-        const newData = req.body; // Pobranie danych z żądania do edycji
-        const { error } = validateEditUser(newData); // Walidacja danych
+        const userIdToUpdate = req.params.userId
+        const newData = req.body
+        const { error } = validateEditUser(newData)
         if (error) {
             return res.status(400).send({ message: error.details[0].message })
         }
@@ -87,7 +84,7 @@ router.put("/:userId", async (req, res) => {
         }
         const updatedUser = await User.findByIdAndUpdate(userIdToUpdate, updatedData, { new: true })
         if (!updatedUser) {
-            return res.status(404).send({ message: "User not found" });
+            return res.status(404).send({ message: "User not found" })
         }
         await dataChanged(updatedUser.email)
         res.status(200).send({ data: updatedUser, message: "User updated successfully" })
@@ -100,16 +97,13 @@ router.put("/role/:userId", currentUser, async (req, res) => {
     try {
         const userId = req.params.userId
         const role = req.body.role
-        //sprawdzenie, czy aktualnie zalogowany użytkownik jest administratorem
         if (req.currentUser.role !== 'admin') {
             return res.status(403).send({ message: "Access forbidden!" })
         }
-        // Pobranie użytkownika z bazy danych na podstawie userId
         const user = await User.findById(userId)
         if (!user) {
             return res.status(404).send({ message: "User not found" })
         }
-        // Aktualizacja roli użytkownika
         user.role = role;
         const updatedUser = await user.save()
         res.status(200).send({ data: updatedUser, message: "User role updated successfully" })
@@ -120,21 +114,20 @@ router.put("/role/:userId", currentUser, async (req, res) => {
 
 router.delete("/", currentUser, async (req, res) => {
     try {
-        // Usunięcie aktualnie zalogowanego użytkownika
-        const deletedUser = await User.findByIdAndDelete(req.currentUser._id); //usunięcie użytkownika za pomocą req.currentUser._id
+        const deletedUser = await User.findByIdAndDelete(req.currentUser._id)
         if (!deletedUser) {
-            return res.status(404).send({ message: "User not found" }) //sprawdza czy user został usunięty
+            return res.status(404).send({ message: "User not found" })
         }
         await userAccountDeleted(req.currentUser.email)
-        res.status(200).send({ data: deletedUser, message: "User deleted successfully" }) //jeśli usunięty - zwraca sukces
+        res.status(200).send({ data: deletedUser, message: "User deleted successfully" })
     } catch (error) {
-        res.status(500).send({ message: error.message });
+        res.status(500).send({ message: error.message })
     }
 });
 
 router.delete("/:userId", async (req, res) => {
     try {
-        const userIdToDelete = req.params.userId; // Pobranie ID użytkownika do usunięcia
+        const userIdToDelete = req.params.userId
         const deletedUser = await User.findByIdAndDelete(userIdToDelete)
         if (!deletedUser) {
             return res.status(404).send({ message: "User not found" })
@@ -147,69 +140,58 @@ router.delete("/:userId", async (req, res) => {
 });
 
 router.post("/reset-password", async (req, res) => {
-    const { email } = req.body;
+    const { email } = req.body
     try {
-        const user = await User.findOne({ email });
-
+        const user = await User.findOne({ email })
         if (!user) {
-            return res.status(404).send({ message: "User doesn't exist" });
+            return res.status(404).send({ message: "User doesn't exist" })
         }
-
         function generateResetToken() {
-            return crypto.randomBytes(20).toString('hex');
+            return crypto.randomBytes(20).toString('hex')
         }
-        
-        // Wygenerowanie unikalnego tokena resetującego hasło
-        const resetToken = generateResetToken(); // Funkcja do generowania tokena
-
-        // Ustawienie tokena i czasu jego ważności dla użytkownika w bazie danych
-        // Zapisanie wygenerowanego tokenu do bazy danych dla danego użytkownika
-        user.resetPasswordToken = resetToken;
-        const tokenExpiry = Date.now() + 3600000; // Token ważny przez 1 godzinę
-
-        await user.save();
-
-        // Wysłanie e-maila z linkiem resetującym hasło
-        const resetLink = `http://localhost:3000/reset-password/${resetToken}`; // Link do strony resetującej hasło
-        await sendResetEmail(email, resetLink); // Wywołanie funkcji wysyłającej e-mail
-
-        return res.status(200).send({ message: "E-mail was sent" });
+        const resetToken = generateResetToken() //wygenerowanie unikalnego tokena resetującego hasło
+        user.resetPasswordToken = resetToken
+        user.resetPasswordTokenCreatedAt  = Date.now() + 3600000 //token ważny przez 1 godzinę
+        await user.save()
+        const resetLink = `http://localhost:3000/reset-password/${resetToken}`
+        await sendResetEmail(email, resetLink)
+        return res.status(200).send({ message: "E-mail was sent" })
     } catch (error) {
-        return res.status(500).send({ message: error.message });
+        return res.status(500).send({ message: error.message })
     }
 });
 
 router.put("/reset-password/:token", async (req, res) => {
-    const { token } = req.params;
-    const { newPassword } = req.body;
+    const { token } = req.params
+    const { newPassword } = req.body
     try {
         const user = await User.findOne({
             resetPasswordToken: token
-        });
-        
-
+        })
         if (!user) {
-            return res.status(400).json({ message: 'Nieprawidłowy lub wygasły token resetowania hasła.' });
+            return res.status(400).send({ message: "Wrong token" })
         }
-
         if (!newPassword) {
-            return res.status(400).json({ message: 'Nowe hasło jest wymagane.' });
+            return res.status(400).send({ message: "New password is required" })
         }
-
-        // Ustawienie nowego hasła dla użytkownika
-        const salt = await bcrypt.genSalt(Number(process.env.SALT));
-        const hashPassword = await bcrypt.hash(newPassword, salt);
-        user.password = hashPassword;
-        // Zeruj pola związane z resetowaniem hasła
-        user.resetPasswordToken = null;
-        user.resetTokenExpiry = null;
-
+        //sprawdzenie ważności tokenu resetowania hasła
+        const tokenCreationTime = new Date(user.resetPasswordTokenCreatedAt).getTime()
+        const currentTime = new Date().getTime()
+        const tokenExpirationTime = tokenCreationTime + 3600000 //1 godzina
+        if (currentTime > tokenExpirationTime) {
+            return res.status(400).send({ message: "Token expired" })
+        }
+        const salt = await bcrypt.genSalt(Number(process.env.SALT))
+        const hashPassword = await bcrypt.hash(newPassword, salt)
+        user.password = hashPassword
+        //zeruj pola związane z resetowaniem hasła
+        user.resetPasswordToken = null
+        user.resetPasswordTokenCreatedAt = null
         await user.save();
-
-        return res.status(200).json({ message: 'Hasło zostało zresetowane pomyślnie.' });
+        return res.status(200).send({ message: "Password changed correctly" })
     } catch (error) {
-        return res.status(500).json({ message: error.message });
+        return res.status(500).send({ message: error.message })
     }
 });
 
-module.exports = router
+module.exports = router;
