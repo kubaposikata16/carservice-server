@@ -7,7 +7,7 @@ const { userDataChanged, userAccountDeleted, dataChanged, accountDeleted, sendRe
 
 router.get("/", currentUser, async (req, res) => {
     try {
-        res.status(200).send({ data: req.currentUser, message: "User details" })
+        res.status(200).send({ data: req.currentUser, message: "Dane użytkownika" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -18,7 +18,7 @@ router.get("/:userId", async (req, res) => {
         const userId = req.params.userId
         const user = await User.findById(userId)
         if (!user) {
-            return res.status(404).send({ message: "User not found" })
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" })
         }
         const userData = {
             firstName: user.firstName,
@@ -26,7 +26,7 @@ router.get("/:userId", async (req, res) => {
             email: user.email,
             phoneNumber: user.phoneNumber
         }
-        res.status(200).send({ data: userData, message: "User details" })
+        res.status(200).send({ data: userData, message: "Dane użytkownika" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -41,7 +41,7 @@ router.put("/", currentUser, async (req, res) => {
         }
         const existingUser = await User.findOne({ email: req.body.email })
         if (existingUser && existingUser._id.toString() !== req.currentUser._id.toString()) {
-            return res.status(400).send({ message: "Email already exists in the database" })
+            return res.status(400).send({ message: "Podany e-mail jest zajęty" })
         }
         let updatedData = { ...req.body }
         if (!req.body.password) {
@@ -53,10 +53,10 @@ router.put("/", currentUser, async (req, res) => {
         }
         const updatedUser = await User.findByIdAndUpdate(req.currentUser._id, updatedData, { new: true }) 
         if (!updatedUser) {
-            return res.status(404).send({ message: "User not found" })
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" })
         }
         await userDataChanged(req.currentUser.email)
-        res.status(200).send({ data: updatedUser, message: "User updated successfully" })
+        res.status(200).send({ data: updatedUser, message: "Dane użytkownika zaktualizowane pomyślnie" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -72,7 +72,7 @@ router.put("/:userId", async (req, res) => {
         }
         const existingUser = await User.findOne({ email: req.body.email })
         if (existingUser && existingUser._id.toString() !== userIdToUpdate) {
-            return res.status(400).send({ message: "Email already exists in the database" })
+            return res.status(400).send({ message: "Podany e-mail jest zajęty" })
         }
         let updatedData = { ...req.body }
         if (!req.body.password) {
@@ -84,10 +84,10 @@ router.put("/:userId", async (req, res) => {
         }
         const updatedUser = await User.findByIdAndUpdate(userIdToUpdate, updatedData, { new: true })
         if (!updatedUser) {
-            return res.status(404).send({ message: "User not found" })
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" })
         }
         await dataChanged(updatedUser.email)
-        res.status(200).send({ data: updatedUser, message: "User updated successfully" })
+        res.status(200).send({ data: updatedUser, message: "Dane użytkownika zaktualizowane pomyślnie" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -98,15 +98,15 @@ router.put("/role/:userId", currentUser, async (req, res) => {
         const userId = req.params.userId
         const role = req.body.role
         if (req.currentUser.role !== 'admin') {
-            return res.status(403).send({ message: "Access forbidden!" })
+            return res.status(403).send({ message: "Brak dostępu" })
         }
         const user = await User.findById(userId)
         if (!user) {
-            return res.status(404).send({ message: "User not found" })
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" })
         }
         user.role = role;
         const updatedUser = await user.save()
-        res.status(200).send({ data: updatedUser, message: "User role updated successfully" })
+        res.status(200).send({ data: updatedUser, message: "Rola użytkownika została zmieniona" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -116,10 +116,10 @@ router.delete("/", currentUser, async (req, res) => {
     try {
         const deletedUser = await User.findByIdAndDelete(req.currentUser._id)
         if (!deletedUser) {
-            return res.status(404).send({ message: "User not found" })
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" })
         }
         await userAccountDeleted(req.currentUser.email)
-        res.status(200).send({ data: deletedUser, message: "User deleted successfully" })
+        res.status(200).send({ data: deletedUser, message: "Konto zostało usunięte" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -130,10 +130,10 @@ router.delete("/:userId", async (req, res) => {
         const userIdToDelete = req.params.userId
         const deletedUser = await User.findByIdAndDelete(userIdToDelete)
         if (!deletedUser) {
-            return res.status(404).send({ message: "User not found" })
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" })
         }
         await accountDeleted(deletedUser.email)
-        res.status(200).send({ data: deletedUser, message: "User deleted successfully" })
+        res.status(200).send({ data: deletedUser, message: "Konto zostało usunięte" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -144,7 +144,7 @@ router.post("/reset-password", async (req, res) => {
     try {
         const user = await User.findOne({ email })
         if (!user) {
-            return res.status(404).send({ message: "User doesn't exist" })
+            return res.status(404).send({ message: "Podano zły adres e-mail" })
         }
         function generateResetToken() {
             return crypto.randomBytes(20).toString('hex')
@@ -155,7 +155,7 @@ router.post("/reset-password", async (req, res) => {
         await user.save()
         const resetLink = `http://localhost:3000/reset-password/${resetToken}`
         await sendResetEmail(email, resetLink)
-        return res.status(200).send({ message: "E-mail was sent" })
+        return res.status(200).send({ message: "Sprawdź swoją skrzynkę pocztową" })
     } catch (error) {
         return res.status(500).send({ message: error.message })
     }
@@ -169,17 +169,17 @@ router.put("/reset-password/:token", async (req, res) => {
             resetPasswordToken: token
         })
         if (!user) {
-            return res.status(400).send({ message: "Wrong token" })
+            return res.status(400).send({ message: "Błędny token" })
         }
         if (!newPassword) {
-            return res.status(400).send({ message: "New password is required" })
+            return res.status(400).send({ message: "Nowe hasło nie może być starym" })
         }
         //sprawdzenie ważności tokenu resetowania hasła
         const tokenCreationTime = new Date(user.resetPasswordTokenCreatedAt).getTime()
         const currentTime = new Date().getTime()
         const tokenExpirationTime = tokenCreationTime + 3600000 //1 godzina
         if (currentTime > tokenExpirationTime) {
-            return res.status(400).send({ message: "Token expired" })
+            return res.status(400).send({ message: "Token wygasł" })
         }
         const salt = await bcrypt.genSalt(Number(process.env.SALT))
         const hashPassword = await bcrypt.hash(newPassword, salt)
@@ -188,7 +188,7 @@ router.put("/reset-password/:token", async (req, res) => {
         user.resetPasswordToken = null
         user.resetPasswordTokenCreatedAt = null
         await user.save();
-        return res.status(200).send({ message: "Password changed correctly" })
+        return res.status(200).send({ message: "Hasło zostało zmienione" })
     } catch (error) {
         return res.status(500).send({ message: error.message })
     }

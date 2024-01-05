@@ -5,7 +5,7 @@ async function currentVisit(req, res, next) {
         const visitId = req.params.visitId
         const visit = await Visit.findById(visitId)
         if (!visit) {
-            return res.status(404).send({ message: "Visit not found" })
+            return res.status(404).send({ message: "Nie znaleziono wizyty" })
         }
         req.currentVisit = visit
         next()

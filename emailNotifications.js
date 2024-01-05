@@ -27,8 +27,8 @@ async function userAccountCreated(email) {
             from: '<warsztat@ethereal.email>',
             to: email,
             subject: "Witamy w Naszym warsztacie",
-            text: "Witamy w Naszym warsztacie! Nie czekaj i umów swoją pierwszą wizytę. Dziękujemy za zaufanie.",
-            html: "Witamy w Naszym warsztacie! Nie czekaj i umów swoją pierwszą wizytę. Dziękujemy za zaufanie.",
+            text: "Witamy w Naszym warsztacie! Nie czekaj i umów swoją pierwszą wizytę już teraz. Dziękujemy za zaufanie.",
+            html: "Witamy w Naszym warsztacie! Nie czekaj i umów swoją pierwszą wizytę już teraz. Dziękujemy za zaufanie.",
         })
         console.log("Message sent: %s", info.messageId)
     } catch (error) {
@@ -76,7 +76,7 @@ async function userVisitCreated(email, visitDetails, newVisitId) {
             from: '<warsztat@ethereal.email>',
             to: email,
             subject: "Umówienie wizyty",
-            text: `Informujemy, że wizyta ${newVisitId} w naszym warsztacie została pomyślnie utworzona. Szczegóły wizyty:
+            text: `Informujemy, że wizyta ${newVisitId} w Naszym warsztacie została pomyślnie utworzona. Szczegóły wizyty:
             Usługa: ${serviceType} - ${service}
             Marka samochodu: ${carBrand}
             Model samochodu: ${carModel}
@@ -87,7 +87,7 @@ async function userVisitCreated(email, visitDetails, newVisitId) {
             VIN: ${vin}
             Numer rejestracyjny: ${registrationNumber}
             Informacje dodatkowe: ${moreInfo}`,
-            html: `Informujemy, że wizyta <b>${newVisitId}</b> w naszym warsztacie została pomyślnie utworzona.<br/><br/>
+            html: `Informujemy, że wizyta <b>${newVisitId}</b> w Naszym warsztacie została pomyślnie utworzona.<br/><br/>
             Szczegóły wizyty:</b><br/>
             <ul>
                 <li>Usługa: ${serviceType} - ${service}</li>
@@ -125,14 +125,14 @@ async function userVisitCanceled(email, visitId) {
     }
 };
 
-async function statusChanged(creatorEmail, newStatus){
+async function statusChanged(creatorEmail, newStatus, visitId){
     try {
         const info = await transporter.sendMail({
             from: '<warsztat@ethereal.email>',
             to: creatorEmail,
             subject: "Zmiana statusu wizyty",
-            text: `Status twojej wizyty uległ zmianie. Aktualny status: ${newStatus}.`,
-            html: `Status twojej wizyty uległ zmianie. Aktualny status: <b>${newStatus}</b>.`,
+            text: `Status wizyty o numerze ${visitId} uległ zmianie. Aktualny status: ${newStatus}.`,
+            html: `Status wizyty o numerze <b>${visitId}</b> uległ zmianie. Aktualny status: <b>${newStatus}</b>.`,
         })
         console.log("Message sent: %s", info.messageId)
     } catch (error) {

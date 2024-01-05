@@ -15,13 +15,13 @@ router.post("/", currentUser, async (req, res) => {
             time: req.body.time,
         })
         if (existingVisit) {
-            return res.status(400).send({ message: "This time slot is already booked!" })
+            return res.status(400).send({ message: "Podany termin jest już zajęty" })
         }
         const newVisit = new Visit({ ...req.body, createdBy: req.currentUser._id })
         const savedVisit = await newVisit.save()
         const newVisitId = savedVisit._id
         await userVisitCreated(req.currentUser.email, req.body, newVisitId)
-        res.status(201).send({ message: "Visit created successfully!" })
+        res.status(201).send({ message: "Umówiono wizytę" })
 	} catch (error) {
 		res.status(500).send({ message: "Internal Server Error" })
 		console.log(error)
@@ -43,7 +43,7 @@ router.get("/userVisits/:userId", async (req, res) => {
         const userId = req.params.userId
         const userVisits = await Visit.find({ createdBy: userId })
         if (!userVisits) {
-            return res.status(404).send({ message: "User visits not found" })
+            return res.status(404).send({ message: "Podana wizyta nie została znaleziona" })
         }
         res.status(200).send({ data: userVisits })
     } catch (error) {

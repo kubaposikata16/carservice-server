@@ -4,7 +4,7 @@ const checkUserRole = (requiredRoles) => {
     if (requiredRoles.includes(userRole)) {
       next()
     } else {
-      res.status(403).send({ message: "Access forbidden!" })
+      res.status(403).send({ message: "Brak dostępu" })
     }
   }
 };

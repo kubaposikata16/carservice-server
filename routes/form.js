@@ -8,7 +8,7 @@ const { userVisitCanceled, statusChanged, visitCanceled } = require("../emailNot
 router.get("/", currentUser, async (req, res) => {
     try {
         const visit = await Visit.find({ createdBy: req.currentUser._id })
-        res.status(200).send({ data: visit, message: "Visit details" })
+        res.status(200).send({ data: visit, message: "Szczegóły wizyty" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
         console.log(error)
@@ -21,20 +21,22 @@ router.put("/status/:visitId", currentUser, async (req, res) => {
         const newStatus = req.body.status
         const visit = await Visit.findById(visitId)
         if (!visit) {
-            return res.status(404).send({ message: "Visit not found" })
+            return res.status(404).send({ message: "Podana wizyta nie została znaleziona" })
         }
         //aktualizacja pola status, jeśli użytkownik ma odpowiednie uprawnienia
         if (req.currentUser.role !== 'employee' && req.currentUser.role !== 'admin') {
-            return res.status(403).send({ message: "Access forbidden!" })
+            return res.status(403).send({ message: "Brak dostępu" })
         }
         visit.status = newStatus
         await visit.save()
         const createdByUser = await User.findById(visit.createdBy);
         if (!createdByUser) {
-            return res.status(404).send({ message: "User not found" });
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" });
         }
-        await statusChanged(createdByUser.email, newStatus)
-        return res.status(200).send({ data: visit, message: "Visit status updated successfully" })
+        console.log("Visit ID before statusChanged:", visitId);
+        await statusChanged(createdByUser.email, newStatus, visitId)
+        console.log("Visit ID after statusChanged:", visitId);
+        return res.status(200).send({ data: visit, message: "Status wizyty został zmieniony" })
     } catch (error) {
         res.status(500).send({ message: error.message })
     }
@@ -45,7 +47,7 @@ router.delete("/:visitId", currentUser, currentVisit, async (req, res) => {
         const visitId = req.params.visitId
         const currentDateTime = new Date() //aktualna data i czas
         if (!req.currentVisit || req.currentVisit.createdBy.toString() !== req.currentUser._id.toString()) {
-            return res.status(403).send({ message: "You are not authorized to delete this visit" })
+            return res.status(403).send({ message: "Brak dostępu" })
         }
         const visitDate = new Date(req.currentVisit.date)
         const visitTime = req.currentVisit.time
@@ -57,14 +59,14 @@ router.delete("/:visitId", currentUser, currentVisit, async (req, res) => {
         console.log("currentDateTime", currentDateTime)
         console.log("visitDateTime", visitDateTime)
         if (!isFutureVisit || timeDiffInHours < minimumHoursForCancellation) {
-            return res.status(403).send({ message: "It's too late to cancel this visit" })
+            return res.status(403).send({ message: "Wizytę można anulować do 24 godzin przed jej terminem" })
         }
         const deletedVisit = await Visit.findByIdAndDelete(visitId)
         if (!deletedVisit) {
-            return res.status(404).send({ message: "Visit not found" })
+            return res.status(404).send({ message: "Nie znaleziono wizyty" })
         }
         await userVisitCanceled(req.currentUser.email, visitId)
-        res.status(200).send({ data: deletedVisit, message: "Visit deleted successfully" })
+        res.status(200).send({ data: deletedVisit, message: "Anulowano wizytę" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
         console.log(error)
@@ -76,20 +78,20 @@ router.delete("/forEmployeeOrAdmin/:visitId", async (req, res) => {
         const visitId = req.params.visitId
         const visitToDelete = await Visit.findById(visitId)
         if (!visitToDelete) {
-            return res.status(404).send({ message: "Visit not found" })
+            return res.status(404).send({ message: "Nie znaleziono wizyty" })
         }
         const createdByUserId = visitToDelete.createdBy
         const user = await User.findById(createdByUserId)
         if (!user) {
-            return res.status(404).send({ message: "User not found" })
+            return res.status(404).send({ message: "Nie znaleziono użytkownika" })
         }
         const email = user.email
         const deletedVisit = await Visit.findByIdAndDelete(visitId)
         if (!deletedVisit) {
-            return res.status(404).send({ message: "Visit not found" })
+            return res.status(404).send({ message: "Nie znaleziono wizyty" })
         }
         await visitCanceled(email, visitId)
-        res.status(200).send({ data: deletedVisit, message: "Visit deleted successfully" })
+        res.status(200).send({ data: deletedVisit, message: "Anulowano wizytę" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })
         console.log(error)
