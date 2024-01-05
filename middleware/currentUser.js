@@ -7,6 +7,7 @@ async function currentUser(req, res, next) {
             return res.status(404).send({ message: "User not found" })
         }
         req.currentUser = user //ustaw bieżącego użytkownika w req.currentUser
+        next()
     } catch (error) {
         res.status(500).send({ message: error.message })
         console.log(error.message)
