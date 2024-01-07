@@ -23,7 +23,6 @@ router.put("/status/:visitId", currentUser, async (req, res) => {
         if (!visit) {
             return res.status(404).send({ message: "Podana wizyta nie została znaleziona" })
         }
-        //aktualizacja pola status, jeśli użytkownik ma odpowiednie uprawnienia
         if (req.currentUser.role !== 'employee' && req.currentUser.role !== 'admin') {
             return res.status(403).send({ message: "Brak dostępu" })
         }
@@ -51,11 +50,12 @@ router.delete("/:visitId", currentUser, currentVisit, async (req, res) => {
         }
         const visitDate = new Date(req.currentVisit.date)
         const visitTime = req.currentVisit.time
-        const visitDateTime = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate(), parseInt(visitTime.split(":")[0]), parseInt(visitTime.split(":")[1]), 0)
-        const timeDiff = visitDateTime.getTime() - currentDateTime.getTime() //różnica czasu między obecnym a wizytą w milisekundach
-        const timeDiffInHours = timeDiff / (1000 * 60 * 60) //różnica czasu w godzinach
+        const visitDateTime = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate(), 
+        parseInt(visitTime.split(":")[0]), parseInt(visitTime.split(":")[1]), 0)
+        const timeDiff = visitDateTime.getTime() - currentDateTime.getTime() 
+        const timeDiffInHours = timeDiff / (1000 * 60 * 60)
         const minimumHoursForCancellation = 24
-        const isFutureVisit = visitDateTime > currentDateTime //sprawdzamy, czy wizyta jest w przyszłości
+        const isFutureVisit = visitDateTime > currentDateTime 
         console.log("currentDateTime", currentDateTime)
         console.log("visitDateTime", visitDateTime)
         if (!isFutureVisit || timeDiffInHours < minimumHoursForCancellation) {

@@ -11,8 +11,7 @@ router.post("/", async (req, res) => {
         const user = await User.findOne({ email: req.body.email })
         if (!user) {
             return res.status(401).send({ message: "Błędny e-mail lub hasło" })
-        }   
-        //jeśli użytkownik zostanie znaleziony, sprawdza poprawność hasła za pomocą funkcji bcrypt.compare             
+        }             
         const validPassword = await bcrypt.compare(
             req.body.password,
             user.password
@@ -20,7 +19,7 @@ router.post("/", async (req, res) => {
         if (!validPassword) {
             return res.status(401).send({ message: "Błędny e-mail lub hasło" })
         }                    
-        const token = user.generateAuthToken() //generowany jest authtoken
+        const token = user.generateAuthToken()
         res.status(200).send({ data: token, message: "Zalogowano" })
     } catch (error) {
         res.status(500).send({ message: "Internal Server Error" })

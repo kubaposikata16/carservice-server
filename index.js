@@ -10,6 +10,7 @@ const formRoutes = require("./routes/form");
 //importy modułów
 const express = require('express');
 const connection = require('./db');
+connection();
 const cors = require('cors');
 const tokenVerification = require('./middleware/tokenVerification');
 const currentUser = require('./middleware/currentUser');
@@ -24,30 +25,30 @@ const port = process.env.PORT || 8080
 
 //definicja endpointów
 app.post("/users"); //rejestracja
-app.get("/users/forEmployee", tokenVerification, checkUserRole(['employee'])); //wyświetlanie użytkowników(klientów i pracowników) w systemie
-app.get("/users/forAdmin", tokenVerification, checkUserRole(['admin'])); //wyświetlanie użytkowników(wszystkich) w systemie
+app.get("/users/forEmployee", tokenVerification, checkUserRole(['employee, admin']));
+app.get("/users/forAdmin", tokenVerification, checkUserRole(['admin']));
 
 app.post("/login"); //logowanie
 
-app.get("/user", tokenVerification, currentUser); //wyświetlanie danych zalogowanego użytkownika
-app.get("/user/:userID", tokenVerification, checkUserRole(['employee', 'admin'])); //wyświetlanie danych dowolnego użytkownika
-app.put("/user", tokenVerification, currentUser); //edycja danych zalogowanego użytkownika
-app.put("/user/:userId", tokenVerification, checkUserRole(['admin'])); //edycja danych dowolnego użytkownika w systemie
-app.put("/user/role/:userId", tokenVerification, currentUser, checkUserRole(['admin'])); //zmienianie roli dowolnego użytkownika w systemie
-app.delete("/user", tokenVerification, currentUser); //usuwanie konta zalogowanego użytkownika
-app.delete("/user/:userId", tokenVerification, checkUserRole(['admin'])); //usuwanie konta dowolnego użytkownika w systemie
-app.post("/user/reset-password"); //podanie emaila i wsyłanie maila z linkiem do resetu hasła
-app.put("/user/reset-password/:token"); //edycja hasła poprzez link z maila
+app.get("/user", tokenVerification, currentUser);
+app.get("/user/:userID", tokenVerification, checkUserRole(['employee', 'admin']));
+app.put("/user", tokenVerification, currentUser);
+app.put("/user/:userId", tokenVerification, checkUserRole(['admin']));
+app.put("/user/role/:userId", tokenVerification, currentUser, checkUserRole(['admin']));
+app.delete("/user", tokenVerification, currentUser);
+app.delete("/user/:userId", tokenVerification, checkUserRole(['admin']));
+app.post("/user/reset-password");
+app.put("/user/reset-password/:token");
 
-app.post("/forms", tokenVerification, currentUser); //dodawanie nowej wizyty przez zalogowanego użytkownika
-app.get("/forms", tokenVerification, checkUserRole(['employee', 'admin'])); //wyświetlanie wszystkich wizyt
-app.get("/forms/userVisits/:visitId", tokenVerification, checkUserRole(['employee', 'admin'])); //wyświetlanie wizyt danego użytkownika
-app.get("available-hours/:date", tokenVerification); //wyświetlanie dostępnych godzin
+app.post("/forms", tokenVerification, currentUser);
+app.get("/forms", tokenVerification, checkUserRole(['employee', 'admin']));
+app.get("/forms/userVisits/:visitId", tokenVerification, checkUserRole(['employee', 'admin']));
+app.get("available-hours/:date", tokenVerification);
 
-app.get("/form", tokenVerification, currentUser); //wyświetlanie wizyt zalogowanego użytkownika
-app.put("/form/status/:visitId", tokenVerification, currentUser, checkUserRole(['employee', 'admin'])); //zmiana statusu wizyty
-app.delete("/form/:visitId", tokenVerification, currentUser, currentVisit); //anulowanie wizyty zalogowanego użytkownika
-app.delete("/form/forEmployeeOrAdmin/:visitId", tokenVerification, checkUserRole(['employee', 'admin'])); //anulowanie wizyty dowolnego użytkownika w systemie
+app.get("/form", tokenVerification, currentUser);
+app.put("/form/status/:visitId", tokenVerification, currentUser, checkUserRole(['employee', 'admin']));
+app.delete("/form/:visitId", tokenVerification, currentUser, currentVisit);
+app.delete("/form/forEmployeeOrAdmin/:visitId", tokenVerification, checkUserRole(['employee', 'admin']));
 
 //dodanie routera dla każdej ścieżki
 app.use("/users", usersRoutes);

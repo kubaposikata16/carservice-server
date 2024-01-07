@@ -100,8 +100,7 @@ async function userVisitCreated(email, visitDetails, newVisitId) {
                 <li>VIN: ${vin}</li>
                 <li>Numer rejestracyjny: ${registrationNumber}</li>
                 <li>Informacje dodatkowe: ${moreInfo}</li>
-            </ul>`
-        })
+            </ul>`})
         console.log("Message sent: %s", info.messageId)
     } catch (error) {
         console.error("Error sending email:", error)
@@ -163,8 +162,10 @@ async function accountDeleted(email) {
             from: '<warsztat@ethereal.email>',
             to: email,
             subject: "Usunięcie konta",
-            text: "Twoje konto zostało pomyślnie usunięte. Smutno nam, że od Nas odchodzisz, ale mamy nadzieję, że jeszcze do Nas wrócisz. Jeśli masz jakieś pytania - skontaktuj się z nami.",
-            html: "Twoje konto zostało pomyślnie usunięte. Smutno nam, że od Nas odchodzisz, ale mamy nadzieję, że jeszcze do Nas wrócisz. Jeśli masz jakieś pytania - skontaktuj się z nami.",
+            text: `Twoje konto zostało pomyślnie usunięte. Smutno nam, że od Nas odchodzisz, ale mamy nadzieję, że jeszcze do Nas wrócisz. 
+            Jeśli masz jakieś pytania - skontaktuj się z nami.`,
+            html: `Twoje konto zostało pomyślnie usunięte. Smutno nam, że od Nas odchodzisz, ale mamy nadzieję, że jeszcze do Nas wrócisz. 
+            Jeśli masz jakieś pytania - skontaktuj się z nami.`,
         })
         console.log("Message sent: %s", info.messageId)
     } catch (error) {

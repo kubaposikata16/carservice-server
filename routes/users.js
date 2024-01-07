@@ -14,9 +14,9 @@ router.post("/", async (req, res) => {
         if (existingUser) {
             return res.status(409).send({ message: "Podany e-mail jest zajęty" })
         }
-        const salt = await bcrypt.genSalt(Number(process.env.SALT)) //generuje salt używany do haszowania hasła
-        const hashPassword = await bcrypt.hash(req.body.password, salt) //haszowanie za pomocą salt i bcrypt
-        const newUser = new User({ //tworzenie obiektu
+        const salt = await bcrypt.genSalt(Number(process.env.SALT))
+        const hashPassword = await bcrypt.hash(req.body.password, salt)
+        const newUser = new User({
             firstName,
             lastName,
             email,
@@ -24,9 +24,9 @@ router.post("/", async (req, res) => {
             phoneNumber,
             role: 'client'
         })
-        await newUser.save() //zapisanie go do bazy danych
+        await newUser.save()
         await userAccountCreated(email);
-        const token = newUser.generateAuthToken() //od razu zalogowany po rejestracji
+        const token = newUser.generateAuthToken()
         res.status(201).send({ data: token, message: "Konto zostało utworzone" })
     } catch (error) {
         res.status(500).send({ message: error.message })

@@ -2,11 +2,11 @@ const jwt = require("jsonwebtoken");
 
 function tokenVerification(req, res, next) {
     console.log("WEJSCIE DO TOKENA")
-    let token = req.headers["x-access-token"] //pobranie tokenu z nagłówka
+    let token = req.headers["x-access-token"]
     if (!token) {
         res.status(403).send({ message: "Brak tokena" })
     }
-    jwt.verify(token, process.env.JWTPRIVATEKEY, (error, decodeduser) => { //jeśli przesłano token - weryfikacja jego poprawności
+    jwt.verify(token, process.env.JWTPRIVATEKEY, (error, decodeduser) => {
         if (error) {
             console.log("Unauthorized!")
             res.status(401).send({ message: "Brak dostępu" })

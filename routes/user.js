@@ -45,7 +45,7 @@ router.put("/", currentUser, async (req, res) => {
         }
         let updatedData = { ...req.body }
         if (!req.body.password) {
-            delete updatedData.password //jeśli nie przekazano nowego hasła, usuń pole "password" z obiektu do aktualizacji
+            delete updatedData.password
         } else {
             const salt = await bcrypt.genSalt(Number(process.env.SALT))
             const hashPassword = await bcrypt.hash(req.body.password, salt)
@@ -149,9 +149,9 @@ router.post("/reset-password", async (req, res) => {
         function generateResetToken() {
             return crypto.randomBytes(20).toString('hex')
         }
-        const resetToken = generateResetToken() //wygenerowanie unikalnego tokena resetującego hasło
+        const resetToken = generateResetToken()
         user.resetPasswordToken = resetToken
-        user.resetPasswordTokenCreatedAt  = Date.now() + 3600000 //token ważny przez 1 godzinę
+        user.resetPasswordTokenCreatedAt  = Date.now() + 3600000 
         await user.save()
         const resetLink = `http://localhost:3000/reset-password/${resetToken}`
         await sendResetEmail(email, resetLink)
@@ -174,17 +174,15 @@ router.put("/reset-password/:token", async (req, res) => {
         if (!newPassword) {
             return res.status(400).send({ message: "Nowe hasło nie może być starym" })
         }
-        //sprawdzenie ważności tokenu resetowania hasła
         const tokenCreationTime = new Date(user.resetPasswordTokenCreatedAt).getTime()
         const currentTime = new Date().getTime()
-        const tokenExpirationTime = tokenCreationTime + 3600000 //1 godzina
+        const tokenExpirationTime = tokenCreationTime + 3600000
         if (currentTime > tokenExpirationTime) {
             return res.status(400).send({ message: "Token wygasł" })
         }
         const salt = await bcrypt.genSalt(Number(process.env.SALT))
         const hashPassword = await bcrypt.hash(newPassword, salt)
         user.password = hashPassword
-        //zeruj pola związane z resetowaniem hasła
         user.resetPasswordToken = null
         user.resetPasswordTokenCreatedAt = null
         await user.save();

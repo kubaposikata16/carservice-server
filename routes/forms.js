@@ -9,7 +9,6 @@ router.post("/", currentUser, async (req, res) => {
 		if(error) {
 			return res.status(400).send({ message: error.details[0].message })
 		}
-        //sprawdź, czy istnieje już wizyta na podaną datę i godzinę
         const existingVisit = await Visit.findOne({
             date: req.body.date,
             time: req.body.time,
@@ -54,12 +53,9 @@ router.get("/userVisits/:userId", async (req, res) => {
 router.get('/available-hours/:date', async (req, res) => {
     try {
         const requestedDate = req.params.date
-        //pobranie godzin zdefiniowanych w schemacie
         const definedHours = Visit.schema.path('time').enumValues
-        //sprawdzenie zajętych godzin dla danego dnia w bazie danych
         const occupiedHours = await Visit.find({ date: requestedDate }, 'time')
         const occupiedTimes = occupiedHours.map(visit => visit.time)
-        //filtrowanie dostępnych godzin na podstawie zdefiniowanych godzin i zajętych godzin
         const availableHours = definedHours.filter(hour => !occupiedTimes.includes(hour))
         res.status(200).json({ availableHours })
     } catch (error) {

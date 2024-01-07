@@ -33,9 +33,9 @@ const carModelEnum = {
 
 const visitSchema = new mongoose.Schema({
     serviceType: { type: String, enum: Object.keys(serviceEnum), required: true },
-    service: { type: String, enum: [], required: function() { return this.serviceType !== null && this.serviceType !== undefined; } }, //pole serviceType musi coś zawierać
+    service: { type: String, enum: [], required: function() { return this.serviceType !== null && this.serviceType !== undefined; } },
     carBrand: { type: String, enum: Object.keys(carModelEnum), required: true },
-    carModel: { type: String, enum: [], required: function() { return this.carBrand !== null && this.carBrand !== undefined; } }, //pole carBrand musi coś zawierać
+    carModel: { type: String, enum: [], required: function() { return this.carBrand !== null && this.carBrand !== undefined; } }, 
     date: { type: Date, required: true },
     time: { type: String, enum: ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", 
         "11:00", "11:30", "12:00", "12:30", "13:00", 
@@ -48,39 +48,39 @@ const visitSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: ['Oczekuje na potwierdzenie', 'Zaakceptowano', 'W trakcie realizacji', 'Zakończono'],
-        default: 'Oczekuje na potwierdzenie' //domyślna rola dla nowych użytkowników
+        default: 'Oczekuje na potwierdzenie'
     },
-    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true } //pole określające autora wizyty
+    createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 }, { collection: "Visits" });
 
-visitSchema.path("service").validate(function(value) { //udostępnienie wartości dla konkretnego serviceType
+visitSchema.path("service").validate(function(value) { 
     return this.serviceType && serviceEnum[this.serviceType].includes(value)
 }, "Invalid service for selected service type");
 
-visitSchema.path("carModel").validate(function(value) { //udostępnienie wartości dla konkretnego carBrand
+visitSchema.path("carModel").validate(function(value) { 
     return this.carBrand && carModelEnum[this.carBrand].includes(value)
 }, "Invalid car model for selected car brand");
 
-const VisitDB = mongoose.connection.useDb("CarService"); //użycie konkretnej bazy danych
+const VisitDB = mongoose.connection.useDb("CarService");
 const Visit = VisitDB.model("Visit", visitSchema);
 
 const validate = (data) => {
     const schema = Joi.object({
         serviceType: Joi.string().valid(...Object.keys(serviceEnum)).required().label("Service type"),
         service: Joi.string().when("serviceType", {
-            is: Joi.exist(), //jeśli pole serviceType istnieje
-            then: Joi.valid(...[].concat(...Object.values(serviceEnum))), //service zgodny z wartościami w serviceType
-            otherwise: Joi.forbidden() //inaczej zabronione, czyli nie można użyć
+            is: Joi.exist(),
+            then: Joi.valid(...[].concat(...Object.values(serviceEnum))),
+            otherwise: Joi.forbidden()
         }).label("Service"),
         carBrand: Joi.string().valid(...Object.keys(carModelEnum)).required().label("Car brand"),
         carModel: Joi.string().when("carBrand", {
-            is: Joi.exist(), //jeśli pole carBrand istnieje
-            then: Joi.valid(...[].concat(...Object.values(carModelEnum))), //carModel zgodny z wartościami w carBrand
-            otherwise: Joi.forbidden() //inaczej zabronione, czyli nie można użyć
+            is: Joi.exist(),
+            then: Joi.valid(...[].concat(...Object.values(carModelEnum))),
+            otherwise: Joi.forbidden()
         }).label("Car model"),
-        date: Joi.date().required().iso().min("now").label("Date").custom((value, helpers) => { //iso - format ISO (YYYY-MM-DD); min(now) - data conajmniej bieżąca(dzisiaj)
-            const day = value.getDay() //pobranie numeru dnia w tygodniu (0 - niedziela, 1 - poniedziałek, ...)
-            if (day === 0 ) { //sprawdzenie niedziela (0)
+        date: Joi.date().required().iso().min("now").label("Date").custom((value, helpers) => { 
+            const day = value.getDay() 
+            if (day === 0 ) { 
                 return helpers.message("Date must be a weekday (Monday-Saturday")
             }
             return value
@@ -91,7 +91,7 @@ const validate = (data) => {
         engine: Joi.number().required().min(0.5).max(8.0).label("Engine"),
         vin: Joi.string().required().pattern(new RegExp('^[A-HJ-NPR-Z0-9]{17}$')).label("VIN"),
         registrationNumber: Joi.string().required().pattern(new RegExp('^[a-zA-Z0-9]{3,8}$')).label("Registration number")
-    }).options({ abortEarly: false }); //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego
+    }).options({ abortEarly: false });
     return schema.validate(data)
 }
 

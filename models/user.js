@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema({
     role: {
         type: String,
         enum: ['client', 'employee', 'admin'],
-        default: 'client' //domyślna rola dla nowych użytkowników
+        default: 'client'
     },
     resetPasswordToken: String,
     resetPasswordTokenCreatedAt: Date
@@ -54,7 +54,7 @@ const validateEditUser = (data) => {
         email: Joi.string().email().optional().label("Email"),
         password: passwordComplexity().min(8).optional().label("Password"),
         phoneNumber: Joi.string().length(9).pattern(/^\d+$/).optional().label("Phone Number")
-    }).options({ abortEarly: false }) //zwrócenie wszystkich błędów, a nie tylko pierwszego napotkanego
+    }).options({ abortEarly: false }) 
     return schema.validate(data)
 };
 
