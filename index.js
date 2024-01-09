@@ -25,7 +25,7 @@ const port = process.env.PORT || 8080
 
 //definicja endpointów
 app.post("/users"); //rejestracja
-app.get("/users/forEmployee", tokenVerification, checkUserRole(['employee, admin']));
+app.get("/users/forEmployee", tokenVerification, checkUserRole(['employee', 'admin']));
 app.get("/users/forAdmin", tokenVerification, checkUserRole(['admin']));
 
 app.post("/login"); //logowanie
